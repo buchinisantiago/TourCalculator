@@ -1,0 +1,15 @@
+name: Keep Supabase Awake
+on:
+  schedule:
+    - cron: '0 0 * * 1' # Every Monday at 00:00
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase API
+        run: |
+          curl -X GET "https://qgriwpjsslovkkmnlntg.supabase.co/rest/v1/pricing_config?select=id" \
+          -H "apikey: sb_publishable_ZnEVeUYjF7ZII5An9ku5rw_1CrNo3Gl" \
+          -H "Authorization: Bearer sb_publishable_ZnEVeUYjF7ZII5An9ku5rw_1CrNo3Gl"

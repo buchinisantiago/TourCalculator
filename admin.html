@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Tour CPH — Admin Panel</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            width: 100%;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        @media (min-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+        .header-admin {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .json-editor {
+            width: 100%;
+            height: 400px;
+            font-family: monospace;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-main);
+            resize: vertical;
+        }
+        .login-box {
+            max-width: 400px;
+            margin: 10vh auto;
+            text-align: center;
+        }
+        .nav-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- HEADER -->
+        <header class="header-admin">
+            <div>
+                <h1><i class="ph ph-gear"></i> Admin Settings</h1>
+                <p>Configuración de precios de calculadoras</p>
+            </div>
+            <div>
+                <a href="index.html" class="nav-link"><i class="ph ph-arrow-left"></i> Volver a Calculadora</a>
+                <button id="btn-logout" class="btn btn-secondary hidden" style="margin-left: 1rem;">Cerrar sesión</button>
+            </div>
+        </header>
+
+        <!-- LOGIN PANEL -->
+        <main id="login-panel" class="glass-panel login-box animate-fade-in">
+            <h2>Iniciar Sesión</h2>
+            <p style="margin-bottom: 1.5rem;">Ingresa con tus credenciales de administrador</p>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="input-group" style="margin-top: 1rem;">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div id="login-error" class="error-message hidden" style="margin-top: 1rem;"></div>
+                <button type="submit" class="btn btn-primary full-width" style="margin-top: 1.5rem;">
+                    Ingresar
+                </button>
+            </form>
+        </main>
+
+        <!-- DASHBOARD PANEL -->
+        <main id="dashboard-panel" class="hidden animate-fade-in dashboard-grid">
+            
+            <!-- LEFT COLUMN -->
+            <div class="dashboard-col-left" style="display: flex; flex-direction: column; gap: 2rem;">
+                <div class="glass-panel">
+                    <h2>⚙️ Configuración Global</h2>
+                    <div class="form-grid" style="grid-template-columns: 1fr; margin-top: 1rem;">
+                        <div class="input-group">
+                            <label for="markupCorporate">% Margen Corporativo</label>
+                            <input type="number" id="markupCorporate" min="0" max="100" value="25">
+                            <small style="color:var(--text-muted);">Aplica a dominios de empresa.</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="markupPersonal">% Margen Personal</label>
+                            <input type="number" id="markupPersonal" min="0" max="100" value="30">
+                            <small style="color:var(--text-muted);">Aplica a @gmail, etc.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VENUES MANAGER -->
+                <div class="glass-panel">
+                    <h2>🎟️ Lista de Venues</h2>
+                    <p style="font-size:0.9rem;">Costos de entrada (DKK).</p>
+                    <div id="venues-list" style="margin: 1rem 0; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <!-- Lista de venues inyectada aquí -->
+                    </div>
+                    <form id="form-add-venue" style="border-top: 1px dashed var(--border-color); padding-top: 1rem;">
+                        <div class="input-group" style="margin-bottom:0.5rem;">
+                            <label>Nombre</label>
+                            <input type="text" id="newVenueName" required placeholder="Ej: Kronborg">
+                        </div>
+                        <div class="input-group">
+                            <label>Precio (DKK)</label>
+                            <input type="number" id="newVenuePrice" required value="100">
+                        </div>
+                        <button type="submit" class="btn btn-secondary full-width" style="margin-top: 1rem;"><i class="ph ph-plus"></i> Agregar</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="dashboard-col-right" style="display: flex; flex-direction: column; gap: 2rem;">
+                
+                <!-- ALL TOURS VIEWER / MANAGER -->
+                <div class="glass-panel">
+                    <h2>🗺️ Gestión Activa de Tours</h2>
+                    <p>Todos tus tours combinados (predefinidos y personalizados). Desde aquí podés editarlos o agregar combos nuevos.</p>
+                    
+                    <div style="margin-top: 1.5rem; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; margin-bottom: 2rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                                    <th style="padding: 1rem 0.5rem; font-weight: 600;">Tour</th>
+                                    <th style="padding: 1rem 0.5rem; font-weight: 600;">Transporte</th>
+                                    <th style="padding: 1rem 0.5rem; font-weight: 600;">Duración</th>
+                                    <th style="padding: 1rem 0.5rem; font-weight: 600;">Puntos a visitar</th>
+                                    <th style="padding: 1rem 0.5rem; font-weight: 600;">Venues Pagados</th>
+                                    <th style="width: 80px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="core-tours-table">
+                                <!-- Injected by admin.js -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 8px; border-left: 3px solid var(--primary);">
+                        <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">➕ Crear Tour Nuevo</h3>
+                        <form id="form-add-tour">
+                            <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap:1rem;">
+                                <div class="input-group">
+                                    <label>Nombre del Tour Nuevo</label>
+                                    <input type="text" id="newTourName" required placeholder="Ej: VIP Evening Tour">
+                                </div>
+                                <div class="input-group">
+                                    <label>Horas Tour</label>
+                                    <input type="number" step="0.5" id="newTourHours" required value="4">
+                                </div>
+                                <div class="input-group">
+                                    <label>Horas Bus <small>(opcional)</small></label>
+                                    <input type="number" step="0.5" id="newTourBusHours" placeholder="Igual al tour si queda vacío">
+                                </div>
+                            </div>
+                            <div class="form-grid" style="grid-template-columns: 1fr 2fr; gap:1rem; margin-top:1rem;">
+                                <div class="input-group">
+                                    <label>Transporte</label>
+                                    <input type="text" id="newTourTransport" placeholder="Ej: Bus + Caminata">
+                                </div>
+                                <div class="input-group">
+                                    <label>Puntos a visitar</label>
+                                    <input type="text" id="newTourSights" placeholder="Ej: La Sirenita, Palacio...">
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-top:1rem;">
+                                <label>Venues a incluir</label>
+                                <div id="new-tour-venues-checkboxes" style="display: flex; gap: 0.5rem; flex-wrap: wrap; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 8px;">
+                                    <!-- Injected by JS -->
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-secondary full-width" style="margin-top: 1rem;"><i class="ph ph-plus"></i> Guardar a la Lista Principal</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- MATRIX PANEL -->
+            <div class="glass-panel" style="margin-bottom: 2rem;">
+                <h2>🚌 Reglas de Tarifas de Transporte y Guías</h2>
+                <p>Aquí modificas los precios base por hora facturada.</p>
+                <div style="margin: 0.75rem 0; padding: 0.6rem 1rem; background: rgba(59,130,246,0.1); border-left: 3px solid var(--primary); border-radius: 0 6px 6px 0; font-size: 0.85rem; color: var(--text-muted);">
+                    <strong style="color: var(--primary);"><i class="ph ph-info"></i> Nota sobre Guías:</strong>
+                    Los guías se pagan <strong>+0.5 hs</strong> extra por encima de la duración del tour (tiempo de llegada anticipada, reunión y recolección de grupo). Este ajuste se aplica automáticamente en todos los cálculos.
+                </div>
+                <div id="loading-msg" style="color: var(--primary); margin: 1rem 0;"><i class="ph ph-spinner ph-spin"></i> Cargando base de datos...</div>
+                
+                <div id="editor-container" class="hidden" style="margin-top: 1rem; overflow-x: auto;">
+                    
+                    <table class="matrix-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; margin-bottom: 1rem;">
+                        <thead>
+                            <tr id="matrix-header" style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
+                                <th style="padding: 0.75rem 0.5rem;">Servicio / Horas</th>
+                                <!-- Inyectado via JS: 1h a 11h -->
+                            </tr>
+                        </thead>
+                        <tbody id="matrix-body">
+                            <!-- Inyectado via JS -->
+                        </tbody>
+                    </table>
+                    
+                </div>
+            </div>
+            
+        </main>
+
+        <!-- STICKY SAVE BAR -->
+        <div id="save-bar" class="hidden" style="
+            position: sticky;
+            bottom: 2rem;
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            z-index: 100;
+        ">
+            <div style="
+                display: flex;
+                align-items: center;
+                gap: 1.5rem;
+                background: rgba(16, 185, 129, 0.15);
+                border: 1px solid rgba(16, 185, 129, 0.4);
+                backdrop-filter: blur(12px);
+                padding: 1rem 2rem;
+                border-radius: 2rem;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            ">
+                <span id="save-msg" style="font-weight: 500; color: var(--text-muted);"></span>
+                <button id="btn-save-prices" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 20px rgba(16,185,129,0.4); white-space: nowrap;">
+                    <i class="ph ph-floppy-disk"></i> Guardar Todo en Base de Datos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/admin.js"></script>
+
+    <!-- PASSWORD MODAL -->
+    <div id="pw-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="glass-panel" style="width: 100%; max-width: 400px; text-align: center;">
+            <h3 style="color: var(--danger); margin-bottom: 0.5rem;"><i class="ph ph-warning"></i> ACCIÓN CRÍTICA</h3>
+            <p style="margin-bottom: 1.5rem; font-size: 0.9rem;">Por seguridad, digita tu contraseña de administrador para confirmar la eliminación de este Tour.</p>
+            <input type="password" id="modal-pw-input" placeholder="Contraseña..." style="margin-bottom: 1rem;">
+            <div id="modal-pw-error" class="hidden" style="color: var(--danger); font-size: 0.85rem; margin-bottom: 1rem;"></div>
+            <div style="display: flex; gap: 1rem;">
+                <button id="modal-btn-cancel" class="btn btn-secondary">Cancelar</button>
+                <button id="modal-btn-confirm" class="btn btn-primary" style="background: var(--danger);">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

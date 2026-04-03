@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Tour CPH — Tour Calculator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Banner and Admin action -->
+        <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end;">
+            <a href="admin.html" class="btn btn-secondary" style="border: 1px solid var(--border-color);"><i class="ph ph-gear"></i> Panel Administrador</a>
+        </div>
+
+        <!-- Welcome Step (Identify) -->
+        <main id="welcome-step" class="glass-panel animate-fade-in" style="max-width: 500px; margin: 10vh auto; text-align: center;">
+            <header>
+                <h1>Tour Calculator</h1>
+                <p>Por favor identifícate para continuar</p>
+            </header>
+            <form id="welcome-form" style="text-align: left; margin-top: 2rem;">
+                <div class="input-group">
+                    <label for="agentName">Nombre</label>
+                    <input type="text" id="agentName" required placeholder="Tu nombre">
+                </div>
+                <div class="input-group" style="margin-top: 1rem;">
+                    <label for="agentEmail">Email</label>
+                    <input type="email" id="agentEmail" required placeholder="tu@email.com">
+                </div>
+                <button type="submit" class="btn btn-primary full-width" style="margin-top: 2rem;">Ingresar a la Calculadora <i class="ph ph-arrow-right"></i></button>
+            </form>
+        </main>
+
+        <!-- Form Panel (Calculator - Hidden initially) -->
+        <main id="calculator-wrap" class="glass-panel hidden animate-fade-in">
+            <header>
+                <h1>Tour Calculator</h1>
+                <p>Generador rápido de cotizaciones para agentes</p>
+            </header>
+
+            <form id="calculator-form">
+                <!-- Section 1 -->
+                <div class="form-section">
+                    <h2><i class="ph ph-info"></i> Basic Info</h2>
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Is a Disembarking tour? (Cruise)</label>
+                            <div class="radio-group">
+                                <label class="radio-card">
+                                    <input type="radio" name="isDisembarking" value="Yes" required>
+                                    <div class="card-content">Yes</div>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="isDisembarking" value="No" checked required>
+                                    <div class="card-content">No</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="pax">How many pax?</label>
+                            <input type="number" id="pax" min="1" max="200" value="1" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="language">Language</label>
+                            <select id="language" required>
+                                <option value="ENG">🇬🇧 ENG</option>
+                                <option value="ESP">🇪🇸 ESP</option>
+                                <option value="ITA">🇮🇹 ITA</option>
+                                <option value="POR">🇵🇹 POR</option>
+                                <option value="FRE">🇫🇷 FRE</option>
+                                <option value="GER">🇩🇪 GER</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="startTime">Start Time</label>
+                            <input type="time" id="startTime" value="10:00" required>
+                        </div>
+
+                        <div class="input-group full-width">
+                            <label>Which tour do you want to quote?</label>
+                            <div class="tour-options radio-group" id="tour-options-container">
+                                <!-- Tours are injected here from app.js -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Custom Tour -->
+                <div id="custom-tour-section" class="form-section hidden animate-fade-in">
+                    <h2><i class="ph ph-faders"></i> Custom Tour Options</h2>
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label for="customHours">How many hours?</label>
+                            <input type="number" id="customHours" min="1" max="10" value="4">
+                        </div>
+                        <div class="input-group">
+                            <label>Do they need a tour guide?</label>
+                            <div class="radio-group">
+                                <label class="radio-card">
+                                    <input type="radio" name="needsGuide" value="true" checked>
+                                    <div class="card-content">Yes</div>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="needsGuide" value="false">
+                                    <div class="card-content">No</div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Venues (Optional)</label>
+                            <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                                <select id="venue1" class="venue-select">
+                                    <option value="No Venue">No Venue</option>
+                                    <option value="Other">Other (Manual Quote)</option>
+                                    <!-- Dynamic options injected here -->
+                                </select>
+                                <select id="venue2" class="venue-select">
+                                    <option value="No Venue">No Venue</option>
+                                    <option value="Other">Other (Manual Quote)</option>
+                                    <!-- Dynamic options injected here -->
+                                </select>
+                                <select id="venue3" class="venue-select">
+                                    <option value="No Venue">No Venue</option>
+                                    <option value="Other">Other (Manual Quote)</option>
+                                    <!-- Dynamic options injected here -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </main>
+
+        <!-- Right Panel: Result (Hidden initially) -->
+        <aside id="quote-sidebar" class="quote-panel hidden animate-fade-in">
+            <div id="error-box" class="error-message hidden"></div>
+            
+            <div id="ticket-view" class="ticket animate-fade-in hidden">
+                <div class="ticket-header">
+                    <h3>FREE TOUR CPH</h3>
+                    <p>OFFICIAL QUOTE</p>
+                </div>
+                
+                <div class="ticket-meta">
+                    <span id="ticket-tour">Citytour and Tivoli</span>
+                    <span id="ticket-datetime">15/06/2026 | 10:00</span>
+                </div>
+                <div class="ticket-meta" style="margin-bottom: 1.5rem;">
+                    <span>Pax: <strong id="ticket-pax">45</strong></span>
+                    <span>Lang: <strong id="ticket-lang">ITA</strong></span>
+                </div>
+
+                <div id="breakdown-lines">
+                    <!-- Javascript will inject lines here -->
+                </div>
+
+                <div class="ticket-total">
+                    <span>TOTAL</span>
+                    <span><span id="ticket-price">0</span> DKK</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" id="btn-copy" class="btn btn-secondary" disabled>
+                    <i class="ph ph-copy"></i> Copy Text
+                </button>
+                <button type="button" id="btn-save" class="btn btn-primary" disabled>
+                    <i class="ph ph-floppy-disk"></i> Save & Record
+                </button>
+            </div>
+            <div id="save-status" style="text-align: center; font-size: 0.85rem; color: var(--text-muted);"></div>
+        </aside>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
