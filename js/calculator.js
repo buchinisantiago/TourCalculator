@@ -30,7 +30,7 @@ function getGuidePrice(hours, config) {
   return config.guide_prices[hr] || config.guide_prices[10];
 }
 
-function getBusPrice(pax, hours, config) {
+function getBusPrice(pax, hours, config, isDisembarking) {
   if (pax === 0) return { totalBusPrice: 0, busCount: 0, busType: 'No Bus', hr: 0 };
 
   const hr = Math.min(11, Math.ceil(hours));
@@ -39,40 +39,45 @@ function getBusPrice(pax, hours, config) {
   let busTypesArr = [];
   let remainingPax = pax;
 
+  // Luggage rule: Only 70% capacity for disembarking tours
+  const capFactor = isDisembarking ? 0.7 : 1.0;
+  const cap48 = Math.floor(48 * capFactor);
+  const cap16 = Math.floor(16 * capFactor);
+  const cap10 = Math.floor(10 * capFactor);
+  const cap6 = Math.floor(6 * capFactor);
+
   // 1. Fill full 48-seater buses
-  const num48 = Math.floor(remainingPax / 48);
+  let num48 = Math.floor(remainingPax / cap48);
   if (num48 > 0) {
       const price48 = config.bus_prices_48[hr] || config.bus_prices_48[11];
       totalBusPrice += (price48 * num48);
       busTypesArr.push(`${num48}x 48-seater`);
-      remainingPax = remainingPax % 48;
+      remainingPax = remainingPax % cap48;
   }
 
   // 2. Fit remainder in smallest possible bus
   if (remainingPax > 0) {
       let remainderBus = {};
-      if (remainingPax <= 6) {
+      if (remainingPax <= cap6) {
           remainderBus.type = '6-seater';
           remainderBus.price = config.bus_prices_6[hr] || config.bus_prices_6[11];
-      } else if (remainingPax <= 10) {
+      } else if (remainingPax <= cap10) {
           remainderBus.type = '10-seater';
           remainderBus.price = config.bus_prices_10[hr] || config.bus_prices_10[11];
-      } else if (remainingPax <= 16) {
+      } else if (remainingPax <= cap16) {
           remainderBus.type = '16-seater';
           remainderBus.price = config.bus_prices_16[hr] || config.bus_prices_16[11];
       } else {
-          // If remainder is between 17 and 47, we need another 48-seater!
-          remainderBus.type = '48-seater';
-          remainderBus.price = config.bus_prices_48[hr] || config.bus_prices_48[11];
+          // If remainder is between the cap of 16-seater and cap of 48-seater, we need another 48-seater!
+          num48++;
+          totalBusPrice += (config.bus_prices_48[hr] || config.bus_prices_48[11]);
+          busTypesArr = [`${num48}x 48-seater`];
+          remainingPax = 0; // consumed
       }
       
-      totalBusPrice += remainderBus.price;
-      
-      // Prevent silly strings like "1x 48-seater + 48-seater"
-      if (remainderBus.type === '48-seater' && num48 > 0) {
-          busTypesArr = [`${num48 + 1}x 48-seater`];
-      } else {
-          busTypesArr.push(remainderBus.type);
+      if (remainingPax > 0) {
+        totalBusPrice += remainderBus.price;
+        busTypesArr.push(remainderBus.type);
       }
   }
 
@@ -135,7 +140,7 @@ export function calculateQuote(input, config) {
   }
   
   // 1 guide per vehicle logic
-  const busInfo = getBusPrice(input.pax, finalBusHours, config);
+  const busInfo = getBusPrice(input.pax, finalBusHours, config, input.isDisembarking === 'Yes');
   const baseGuidePrice = needsGuide ? getGuidePrice(hours, config) : 0;
   const guidePrice = baseGuidePrice * busInfo.busCount;
   

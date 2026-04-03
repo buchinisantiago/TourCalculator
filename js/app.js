@@ -73,6 +73,14 @@ function updateUI() {
         updateTourInfoBox(data.tour);
     }
 
+    // Toggle Luggage Note
+    const luggageNote = document.getElementById('luggage-note');
+    if (data.isDisembarking === 'Yes') {
+        luggageNote.classList.remove('hidden');
+    } else {
+        luggageNote.classList.add('hidden');
+    }
+
     if (!data.date || !data.startTime || !pricingConfig) {
         // Essential data missing or prices not loaded yet
         return;
