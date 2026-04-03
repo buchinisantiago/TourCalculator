@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Free Tour CPH — Tour Calculator</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- jsPDF for Invoice generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -93,6 +96,11 @@
                                 <!-- Tours are injected here from app.js -->
                             </div>
                         </div>
+
+                        <!-- NEW: Info box about selected tour -->
+                        <div id="tour-info-box" class="tour-info-container hidden">
+                            <!-- Injected by app.js -->
+                        </div>
                     </div>
                 </div>
 
@@ -169,15 +177,11 @@
                     <span>TOTAL</span>
                     <span><span id="ticket-price">0</span> DKK</span>
                 </div>
-            </div>
-
-            <div class="actions">
-                <button type="button" id="btn-copy" class="btn btn-secondary" disabled>
-                    <i class="ph ph-copy"></i> Copy Text
-                </button>
-                <button type="button" id="btn-save" class="btn btn-primary" disabled>
-                    <i class="ph ph-floppy-disk"></i> Save & Record
-                </button>
+                <div id="save-bar" class="hidden" style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+                    <button id="btn-copy" class="btn btn-secondary" style="flex: 1;"><i class="ph ph-copy"></i> Copy Text</button>
+                    <button id="btn-email" class="btn btn-secondary" style="flex: 1; border-color: var(--primary); color: var(--primary);"><i class="ph ph-envelope"></i> Email Invoice</button>
+                    <button id="btn-save" class="btn btn-primary" style="flex: 1.2;"><i class="ph ph-floppy-disk"></i> Save & Record</button>
+                </div>
             </div>
             <div id="save-status" style="text-align: center; font-size: 0.85rem; color: var(--text-muted);"></div>
         </aside>

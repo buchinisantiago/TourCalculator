@@ -13,6 +13,7 @@ const errorBox = document.getElementById('error-box');
 const ticketView = document.getElementById('ticket-view');
 const breakdownLines = document.getElementById('breakdown-lines');
 const btnCopy = document.getElementById('btn-copy');
+const btnEmail = document.getElementById('btn-email');
 const btnSave = document.getElementById('btn-save');
 const saveStatus = document.getElementById('save-status');
 
@@ -62,11 +63,14 @@ function formatCurrency(amount) {
 function updateUI() {
     const data = getFormData();
     
-    // Toggle Section 2
+    // Toggle Section 2 & Info Box
+    const infoBox = document.getElementById('tour-info-box');
     if (data.tour === 'OTHER') {
         customTourSection.classList.remove('hidden');
+        infoBox.classList.add('hidden');
     } else {
         customTourSection.classList.add('hidden');
+        updateTourInfoBox(data.tour);
     }
 
     if (!data.date || !data.startTime || !pricingConfig) {
@@ -82,6 +86,7 @@ function updateUI() {
         ticketView.classList.add('hidden');
         btnCopy.disabled = true;
         btnSave.disabled = true;
+        btnEmail.disabled = true;
         currentQuote = null;
         return;
     }
@@ -89,8 +94,11 @@ function updateUI() {
     // Success calculation
     errorBox.classList.add('hidden');
     ticketView.classList.remove('hidden');
+    document.getElementById('save-bar').classList.remove('hidden');
+    saveStatus.textContent = '';
     btnCopy.disabled = false;
     btnSave.disabled = false;
+    btnEmail.disabled = false;
     currentQuote = { data, result };
 
     // Update Ticket Header
@@ -196,6 +204,108 @@ btnCopy.addEventListener('click', () => {
             btnCopy.style.color = '';
         }, 3000);
     });
+});
+
+function updateTourInfoBox(tourName) {
+    const infoBox = document.getElementById('tour-info-box');
+    if (!pricingConfig) return;
+    
+    const combinedTours = { ...TOUR_DEFAULTS, ...(pricingConfig.custom_tours || {}) };
+    const info = combinedTours[tourName];
+    
+    if (!info) {
+        infoBox.classList.add('hidden');
+        return;
+    }
+
+    infoBox.classList.remove('hidden');
+    
+    const transport = info.transport || '—';
+    const sights = info.sights || '—';
+    const venues = (info.venues && info.venues.length > 0) ? info.venues.join(', ') : 'No venues included';
+
+    infoBox.innerHTML = `
+        <table class="tour-info-table">
+            <tr>
+                <td class="label">Transporte</td>
+                <td class="value"><strong>${transport}</strong></td>
+            </tr>
+            <tr>
+                <td class="label">Duración</td>
+                <td class="value"><strong>${info.hours} hs</strong></strong></td>
+            </tr>
+            <tr>
+                <td class="label">Puntos a visitar</td>
+                <td class="value">${sights}</td>
+            </tr>
+            <tr>
+                <td class="label">Incluye</td>
+                <td class="value" style="color: var(--success); font-weight: 500;">
+                    <i class="ph ph-ticket"></i> ${venues}
+                </td>
+            </tr>
+        </table>
+    `;
+}
+
+// Send Email logic (via Supabase Edge Function)
+btnEmail.addEventListener('click', async () => {
+    if (!currentQuote || !window.jspdf) return;
+
+    btnEmail.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Sending...';
+    btnEmail.disabled = true;
+
+    try {
+        const { data, result } = currentQuote;
+        
+        // 1. Generate PDF (we use the Ticket div)
+        const ticketElement = document.getElementById('ticket-view');
+        const saveBar = document.getElementById('save-bar');
+        
+        // Temporarily hide buttons for clean PDF
+        saveBar.style.visibility = 'hidden';
+
+        const canvas = await html2canvas(ticketElement, { 
+            scale: 2,
+            backgroundColor: '#0f172a' // match theme
+        });
+        const imgData = canvas.toDataURL('image/png');
+        
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        
+        // Get PDF as base64 without the 'data:application/pdf;base64,' prefix
+        const pdfBase64 = pdf.output('datauristring').split(',')[1];
+        
+        saveBar.style.visibility = 'visible';
+
+        // 2. Call Supabase Edge Function to notify the office (info@freetourcph.com)
+        const { data: functionData, error: functionError } = await supabase.functions.invoke('send-invoice', {
+            body: {
+                agentEmail: sessionUser.email,
+                agentName: sessionUser.name,
+                tourName: result.summary.tour,
+                pdfBase64: pdfBase64
+            }
+        });
+
+        if (functionError) throw functionError;
+
+        saveStatus.style.color = 'var(--primary)';
+        saveStatus.textContent = "Request sent to Office for verification.";
+    } catch (err) {
+        console.error(err);
+        saveStatus.style.color = 'var(--danger)';
+        saveStatus.textContent = "Error sending email. Check console.";
+    } finally {
+        btnEmail.innerHTML = '<i class="ph ph-envelope"></i> Email Invoice';
+        btnEmail.disabled = false;
+    }
 });
 
 // Save logic to Supabase
