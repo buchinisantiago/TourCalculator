@@ -445,6 +445,7 @@ async function initPricing() {
         errorBox.classList.add('hidden');
         pricingConfig = data;
         buildDynamicUI();
+        updateUI();
     }
 }
 
