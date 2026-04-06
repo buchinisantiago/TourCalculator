@@ -283,10 +283,11 @@ function updateUI() {
     // Sub-totals calculations
     const perPerson = Math.round(result.totalPrice / result.summary.pax);
     const inEur = Math.round(result.totalPrice / DKK_TO_EUR);
+    const eurPerPerson = Math.round(inEur / result.summary.pax);
     
     const t = TRANSLATIONS[currentLang];
     tPricePax.textContent = `${formatCurrency(perPerson)} DKK / ${t.total_pax}`;
-    tPriceEur.textContent = `${t.approx} ${formatCurrency(inEur)} EUR`;
+    tPriceEur.textContent = `${t.approx} ${formatCurrency(inEur)} EUR (${formatCurrency(eurPerPerson)} EUR / pax)`;
     tSubtotals.classList.remove('hidden');
 
     // Update Breakdown
@@ -401,8 +402,10 @@ btnCopy.addEventListener('click', () => {
     // New: Per Pax and EUR
     const perPax = Math.round(result.totalPrice / d.pax);
     const inEur = Math.round(result.totalPrice / DKK_TO_EUR);
+    const eurPerPax = Math.round(inEur / d.pax);
+    
     txt += `(DKK ${formatCurrency(perPax)} ${t.total_pax})\n`;
-    txt += `${t.approx} EUR: ${formatCurrency(inEur)} €\n`;
+    txt += `${t.approx} EUR: ${formatCurrency(inEur)} € (${formatCurrency(eurPerPax)} EUR / pax)\n`;
     
     navigator.clipboard.writeText(txt).then(() => {
         const icon = btnCopy.innerHTML;
