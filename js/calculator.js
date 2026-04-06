@@ -169,6 +169,7 @@ export function calculateQuote(input, config) {
     },
     breakdown: {
       guidePrice:      guidePrice,
+      guideHours:      needsGuide ? hours + 0.5 : 0,
       busPrice: busInfo.totalBusPrice,
       busCount: busInfo.busCount,
       guideCount: needsGuide ? busInfo.busCount : 0,

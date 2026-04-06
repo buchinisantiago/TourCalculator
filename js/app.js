@@ -29,6 +29,11 @@ const tDatetime = document.getElementById('ticket-datetime');
 const tPax = document.getElementById('ticket-pax');
 const tLang = document.getElementById('ticket-lang');
 const tPrice = document.getElementById('ticket-price');
+const tPricePax = document.getElementById('ticket-price-pax');
+const tPriceEur = document.getElementById('ticket-price-eur');
+const tSubtotals = document.getElementById('ticket-subtotals');
+
+const DKK_TO_EUR = 7.46;
 
 let currentQuote = null; // Store the latest calculation
 let pricingConfig = null; // Store dynamic pricing from DB
@@ -116,19 +121,31 @@ function updateUI() {
     tPax.textContent = result.summary.pax;
     tLang.textContent = result.summary.language;
     tPrice.textContent = formatCurrency(result.totalPrice);
+    
+    // Sub-totals calculations
+    const perPerson = Math.round(result.totalPrice / result.summary.pax);
+    const inEur = Math.round(result.totalPrice / DKK_TO_EUR);
+    
+    tPricePax.textContent = formatCurrency(perPerson);
+    tPriceEur.textContent = formatCurrency(inEur);
+    tSubtotals.classList.remove('hidden');
 
     // Update Breakdown
     breakdownLines.innerHTML = '';
     
     if (result.breakdown.guidePrice > 0) {
+        const hGuide = result.breakdown.guideHours;
         const guideLabel = result.breakdown.guideCount > 1 
-            ? `Guides (${result.breakdown.guideCount}x ${result.summary.hours}h)` 
-            : `Guide (${result.summary.hours}h)`;
+            ? `Guides (${result.breakdown.guideCount}x ${hGuide}h)` 
+            : `Guide (${hGuide}h)`;
             
         breakdownLines.innerHTML += `
             <div class="ticket-line">
                 <span class="bold">${guideLabel}:</span>
                 <span>DKK ${formatCurrency(result.breakdown.guidePrice)}</span>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-style: italic; margin-top: -0.5rem; margin-bottom: 0.5rem; line-height: 1.2;">
+                Incluye 30 min extra por llegada anticipada y coordinación con el chofer.
             </div>`;
     }
 
@@ -186,7 +203,10 @@ btnCopy.addEventListener('click', () => {
     txt += `DISEMBARKING:  ${d.isDisembarking}\n\n`;
 
     txt += `BREAKDOWN:\n`;
-    if (b.guidePrice > 0) txt += `- Guide (${d.hours}h): DKK ${formatCurrency(b.guidePrice)}\n`;
+    if (b.guidePrice > 0) {
+        txt += `- Guide (${b.guideHours}h): DKK ${formatCurrency(b.guidePrice)}\n`;
+        txt += `  (Incluye 30 min extra de preparación y llegada anticipada)\n`;
+    }
     if (b.busPrice > 0) txt += `- Bus (${b.busCount}× ${b.busType}): DKK ${formatCurrency(b.busPrice)}\n`;
     
     if (b.venues.length > 0) {
@@ -200,6 +220,12 @@ btnCopy.addEventListener('click', () => {
     txt += `Markup (${b.markupPercent}%): DKK ${formatCurrency(b.marginValue)}\n`;
 
     txt += `\nTOTAL: DKK ${formatCurrency(result.totalPrice)}\n`;
+    
+    // New: Per Pax and EUR
+    const perPax = Math.round(result.totalPrice / d.pax);
+    const inEur = Math.round(result.totalPrice / DKK_TO_EUR);
+    txt += `(DKK ${formatCurrency(perPax)} per person)\n`;
+    txt += `Total Approx. EUR: ${formatCurrency(inEur)} €\n`;
     
     navigator.clipboard.writeText(txt).then(() => {
         const icon = btnCopy.innerHTML;

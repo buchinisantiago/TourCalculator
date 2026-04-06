@@ -21,6 +21,7 @@ const matrixBody = document.getElementById('matrix-body');
 const markupCorporate = document.getElementById('markupCorporate');
 const markupPersonal = document.getElementById('markupPersonal');
 const btnSavePrices = document.getElementById('btn-save-prices');
+const btnIncreaseAll = document.getElementById('btn-increase-all');
 const saveMsg = document.getElementById('save-msg');
 
 let currentSession = null;
@@ -576,6 +577,38 @@ btnSavePrices.addEventListener('click', async () => {
         btnSavePrices.disabled = false;
         btnSavePrices.innerHTML = `<i class="ph ph-floppy-disk"></i> Guardar Todo en Base de Datos`;
     }
+});
+
+// ---- BULK ACTIONS ----
+btnIncreaseAll.addEventListener('click', () => {
+    if (!currentConfig) return;
+    
+    const confirmIncrease = confirm("¿Estás seguro de aumentar +10% a todos los precios de Transporte, Guías y Venues?");
+    if (!confirmIncrease) return;
+
+    const priceKeys = ['guide_prices', 'bus_prices_6', 'bus_prices_10', 'bus_prices_16', 'bus_prices_48', 'venue_prices'];
+
+    priceKeys.forEach(key => {
+        if (currentConfig[key]) {
+            for (const itemKey in currentConfig[key]) {
+                const currentVal = currentConfig[key][itemKey];
+                if (typeof currentVal === 'number') {
+                    currentConfig[key][itemKey] = Math.round(currentVal * 1.1);
+                }
+            }
+        }
+    });
+
+    // Re-render UI to show changes
+    renderMatrix();
+    renderVenues();
+    
+    // Feedback
+    saveMsg.textContent = "🚀 +10% aplicado localmente. ¡Recuerda GUARDAR en la base de datos!";
+    saveMsg.style.color = "var(--primary)";
+    
+    // Scroll to matrix to see changes
+    document.getElementById('editor-container').scrollIntoView({ behavior: 'smooth' });
 });
 
 // ---- MODAL DELETE LOGIC ----
