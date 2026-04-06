@@ -38,6 +38,151 @@ const DKK_TO_EUR = 7.46;
 let currentQuote = null; // Store the latest calculation
 let pricingConfig = null; // Store dynamic pricing from DB
 let sessionUser = { name: '', email: '' }; // Store the authenticated agent from step 1
+let currentLang = 'ESP'; // Global state for UI language
+
+const TRANSLATIONS = {
+    ESP: {
+        admin_panel: "Panel Administrador",
+        welcome_title: "Tour Calculator",
+        welcome_subtitle: "Por favor identifícate para continuar",
+        name_label: "Nombre",
+        email_label: "Email",
+        enter_btn: "Ingresar a la Calculadora",
+        basic_info: "Información Básica",
+        is_cruise: "🚢 ¿Es un tour de desembarque? (Crucero)",
+        pax_label: "Pasajeros (Pax)",
+        lang_label: "Idioma del Tour",
+        date_label: "Fecha",
+        time_label: "Hora de Inicio",
+        which_tour: "¿Qué tour deseas cotizar?",
+        custom_options: "Opciones de Tour Personalizado",
+        hours_label: "¿Cuántas horas?",
+        needs_guide: "¿Necesitan guía de turismo?",
+        venues_label: "Venues / Entradas (Opcional)",
+        itinerary_label: "Itinerario / Notas especiales",
+        itinerary_placeholder: "Describe los lugares a visitar o requerimientos especiales...",
+        guide_label: "Guía",
+        guides_label: "Guías",
+        bus_label: "Bus",
+        extra_note: "Incluye 30 min extra por llegada anticipada y coordinación con el chofer.",
+        net_total: "Total Neto",
+        markup: "Margen",
+        total_pax: "por persona",
+        approx: "Aprox.",
+        copy_btn: "Copiar Texto",
+        email_btn: "Enviar x Email",
+        save_btn: "Guardar y Registrar",
+        other: "OTRO",
+        yes: "Sí",
+        no: "No"
+    },
+    ENG: {
+        admin_panel: "Admin Panel",
+        welcome_title: "Tour Calculator",
+        welcome_subtitle: "Please identify yourself to continue",
+        name_label: "Name",
+        email_label: "Email",
+        enter_btn: "Enter Calculator",
+        basic_info: "Basic Info",
+        is_cruise: "🚢 Is a disembarking tour? (Cruise)",
+        pax_label: "Passengers (Pax)",
+        lang_label: "Tour Language",
+        date_label: "Date",
+        time_label: "Start Time",
+        which_tour: "Which tour do you want to quote?",
+        custom_options: "Custom Tour Options",
+        hours_label: "How many hours?",
+        needs_guide: "Do they need a tour guide?",
+        venues_label: "Venues (Optional)",
+        itinerary_label: "Itinerary / Special Notes",
+        itinerary_placeholder: "Describe the places to visit or special requirements...",
+        guide_label: "Guide",
+        guides_label: "Guides",
+        bus_label: "Bus",
+        extra_note: "Includes 30 min extra for early arrival and driver coordination.",
+        net_total: "Net Total",
+        markup: "Markup",
+        total_pax: "per person",
+        approx: "Approx.",
+        copy_btn: "Copy Text",
+        email_btn: "Email Invoice",
+        save_btn: "Save & Record",
+        other: "OTHER",
+        yes: "Yes",
+        no: "No"
+    },
+    ITA: {
+        admin_panel: "Pannello Amministratore",
+        welcome_title: "Calcolatore Tour",
+        welcome_subtitle: "Per favore identificati per continuare",
+        name_label: "Nome",
+        email_label: "Email",
+        enter_btn: "Entra nel Calcolatore",
+        basic_info: "Informazioni di Base",
+        is_cruise: "🚢 È un tour di sbarco? (Crociera)",
+        pax_label: "Passeggeri (Pax)",
+        lang_label: "Lingua del Tour",
+        date_label: "Data",
+        time_label: "Ora di Inizio",
+        which_tour: "Quale tour vuoi quotare?",
+        custom_options: "Opzioni Tour Personalizzato",
+        hours_label: "Quante ore?",
+        needs_guide: "Hanno bisogno di una guida?",
+        venues_label: "Venues (Opzionale)",
+        itinerary_label: "Itinerario / Note speciali",
+        itinerary_placeholder: "Descrivi i luoghi da visitare o richieste speciali...",
+        guide_label: "Guida",
+        guides_label: "Guide",
+        bus_label: "Bus",
+        extra_note: "Include 30 min extra per arrivo anticipato e coordinamento con l'autista.",
+        net_total: "Totale Netto",
+        markup: "Margine",
+        total_pax: "per persona",
+        approx: "Appross.",
+        copy_btn: "Copia Testo",
+        email_btn: "Invia per Email",
+        save_btn: "Salva e Registra",
+        other: "ALTRO",
+        yes: "Sì",
+        no: "No"
+    }
+};
+
+function setAppLanguage(lang) {
+    currentLang = lang;
+    const t = TRANSLATIONS[lang];
+    
+    // Update all elements with data-key
+    document.querySelectorAll('.i18n').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (t[key]) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.placeholder = t[key];
+            } else {
+                el.textContent = t[key];
+            }
+        }
+    });
+
+    // Handle special placeholders
+    const itineraryTextarea = document.getElementById('customItinerary');
+    if (itineraryTextarea) itineraryTextarea.placeholder = t.itinerary_placeholder;
+
+    // Sync Tour Language selector if needed
+    const langSelect = document.getElementById('language');
+    if (langSelect) {
+        if (lang === 'ESP') langSelect.value = 'ESP';
+        if (lang === 'ENG') langSelect.value = 'ENG';
+        if (lang === 'ITA') langSelect.value = 'ITA';
+    }
+
+    // Update active flag state
+    document.querySelectorAll('.lang-flag').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+    });
+
+    updateUI();
+}
 
 // Form Elements needed for conditionals
 const tourRadios = document.getElementsByName('tour');
@@ -54,6 +199,7 @@ function getFormData() {
         startTime: document.getElementById('startTime').value,
         tour: document.querySelector('input[name="tour"]:checked')?.value,
         customHours: parseFloat(document.getElementById('customHours').value) || 4,
+        customItinerary: document.getElementById('customItinerary').value.trim(),
         needsGuide: document.querySelector('input[name="needsGuide"]:checked')?.value === 'true',
         venue1: document.getElementById('venue1').value,
         venue2: document.getElementById('venue2').value,
@@ -70,11 +216,15 @@ function updateUI() {
     
     // Toggle Section 2 & Info Box
     const infoBox = document.getElementById('tour-info-box');
+    const customItineraryBox = document.getElementById('custom-itinerary-container');
+    
     if (data.tour === 'OTHER') {
         customTourSection.classList.remove('hidden');
+        customItineraryBox.classList.remove('hidden');
         infoBox.classList.add('hidden');
     } else {
         customTourSection.classList.add('hidden');
+        customItineraryBox.classList.add('hidden');
         updateTourInfoBox(data.tour);
     }
 
@@ -126,8 +276,9 @@ function updateUI() {
     const perPerson = Math.round(result.totalPrice / result.summary.pax);
     const inEur = Math.round(result.totalPrice / DKK_TO_EUR);
     
-    tPricePax.textContent = formatCurrency(perPerson);
-    tPriceEur.textContent = formatCurrency(inEur);
+    const t = TRANSLATIONS[currentLang];
+    tPricePax.textContent = `${formatCurrency(perPerson)} DKK / ${t.total_pax}`;
+    tPriceEur.textContent = `${t.approx} ${formatCurrency(inEur)} EUR`;
     tSubtotals.classList.remove('hidden');
 
     // Update Breakdown
@@ -136,8 +287,8 @@ function updateUI() {
     if (result.breakdown.guidePrice > 0) {
         const hGuide = result.breakdown.guideHours;
         const guideLabel = result.breakdown.guideCount > 1 
-            ? `Guides (${result.breakdown.guideCount}x ${hGuide}h)` 
-            : `Guide (${hGuide}h)`;
+            ? `${t.guides_label} (${result.breakdown.guideCount}x ${hGuide}h)` 
+            : `${t.guide_label} (${hGuide}h)`;
             
         breakdownLines.innerHTML += `
             <div class="ticket-line">
@@ -145,15 +296,24 @@ function updateUI() {
                 <span>DKK ${formatCurrency(result.breakdown.guidePrice)}</span>
             </div>
             <div style="font-size: 0.7rem; color: var(--text-muted); font-style: italic; margin-top: -0.5rem; margin-bottom: 0.5rem; line-height: 1.2;">
-                Incluye 30 min extra por llegada anticipada y coordinación con el chofer.
+                ${t.extra_note}
             </div>`;
     }
 
     if (result.breakdown.busPrice > 0) {
         breakdownLines.innerHTML += `
             <div class="ticket-line">
-                <span class="bold">Bus (${result.breakdown.busCount}× ${result.breakdown.busType}):</span>
+                <span class="bold">${t.bus_label} (${result.breakdown.busCount}× ${result.breakdown.busType}):</span>
                 <span>DKK ${formatCurrency(result.breakdown.busPrice)}</span>
+            </div>`;
+    }
+    
+    // Add Custom Itinerary to Ticket if present
+    if (data.customItinerary && data.tour === 'OTHER') {
+        breakdownLines.innerHTML += `
+            <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; font-size: 0.85rem; border-left: 3px solid var(--primary);">
+                <div style="font-weight: 600; font-size: 0.7rem; text-transform: uppercase; color: var(--primary); margin-bottom: 0.25rem;">${t.itinerary_label}</div>
+                <div style="color: var(--text-main); font-style: italic; white-space: pre-wrap;">"${data.customItinerary}"</div>
             </div>`;
     }
 
@@ -171,11 +331,11 @@ function updateUI() {
     // Add Subtotal and Margin
     breakdownLines.innerHTML += `
         <div class="ticket-line" style="margin-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 0.5rem;">
-            <span class="bold">Net Total:</span>
+            <span class="bold">${t.net_total}:</span>
             <span>DKK ${formatCurrency(result.breakdown.netTotal)}</span>
         </div>
         <div class="ticket-line">
-            <span class="bold">Markup (${result.breakdown.markupPercent}%):</span>
+            <span class="bold">${t.markup} (${result.breakdown.markupPercent}%):</span>
             <span>DKK ${formatCurrency(result.breakdown.marginValue)}</span>
         </div>`;
 }
@@ -191,23 +351,28 @@ btnCopy.addEventListener('click', () => {
     const { data, result } = currentQuote;
     const d = result.summary;
     const b = result.breakdown;
-    const cleanDate = new Date(d.date).toLocaleDateString('es-ES');
+    const cleanDate = new Date(d.date).toLocaleDateString(currentLang === 'ENG' ? 'en-US' : 'es-ES');
+    const t = TRANSLATIONS[currentLang];
 
     let txt = `FREE TOUR COPENHAGEN — QUOTE\n`;
     txt += `----------------------------------\n`;
     txt += `FROM:          ${data.name} (${data.email})\n`;
-    txt += `TOUR:          ${d.tour}\n`;
+    txt += `TOUR:          ${d.tour === 'OTHER' ? t.other : d.tour}\n`;
     txt += `DATE:          ${cleanDate} at ${d.startTime}\n`;
     txt += `PAX:           ${d.pax}\n`;
     txt += `LANGUAGE:      ${d.language}\n`;
     txt += `DISEMBARKING:  ${d.isDisembarking}\n\n`;
 
+    if (data.customItinerary && d.tour === 'OTHER') {
+        txt += `ITINERARY:\n"${data.customItinerary}"\n\n`;
+    }
+
     txt += `BREAKDOWN:\n`;
     if (b.guidePrice > 0) {
-        txt += `- Guide (${b.guideHours}h): DKK ${formatCurrency(b.guidePrice)}\n`;
-        txt += `  (Incluye 30 min extra de preparación y llegada anticipada)\n`;
+        txt += `- ${b.guideCount > 1 ? t.guides_label : t.guide_label} (${b.guideHours}h): DKK ${formatCurrency(b.guidePrice)}\n`;
+        txt += `  (${t.extra_note})\n`;
     }
-    if (b.busPrice > 0) txt += `- Bus (${b.busCount}× ${b.busType}): DKK ${formatCurrency(b.busPrice)}\n`;
+    if (b.busPrice > 0) txt += `- ${t.bus_label} (${b.busCount}× ${b.busType}): DKK ${formatCurrency(b.busPrice)}\n`;
     
     if (b.venues.length > 0) {
         txt += `- Venues:\n`;
@@ -216,16 +381,16 @@ btnCopy.addEventListener('click', () => {
         });
     }
     
-    txt += `\nNet Total:     DKK ${formatCurrency(b.netTotal)}\n`;
-    txt += `Markup (${b.markupPercent}%): DKK ${formatCurrency(b.marginValue)}\n`;
+    txt += `\n${t.net_total}:     DKK ${formatCurrency(b.netTotal)}\n`;
+    txt += `${t.markup} (${b.markupPercent}%): DKK ${formatCurrency(b.marginValue)}\n`;
 
     txt += `\nTOTAL: DKK ${formatCurrency(result.totalPrice)}\n`;
     
     // New: Per Pax and EUR
     const perPax = Math.round(result.totalPrice / d.pax);
     const inEur = Math.round(result.totalPrice / DKK_TO_EUR);
-    txt += `(DKK ${formatCurrency(perPax)} per person)\n`;
-    txt += `Total Approx. EUR: ${formatCurrency(inEur)} €\n`;
+    txt += `(DKK ${formatCurrency(perPax)} ${t.total_pax})\n`;
+    txt += `${t.approx} EUR: ${formatCurrency(inEur)} €\n`;
     
     navigator.clipboard.writeText(txt).then(() => {
         const icon = btnCopy.innerHTML;
@@ -399,6 +564,10 @@ btnSave.addEventListener('click', async () => {
 });
 
 // ---- INIT & WELCOME FLOW ----
+document.querySelectorAll('.lang-flag').forEach(btn => {
+    btn.addEventListener('click', () => setAppLanguage(btn.getAttribute('data-lang')));
+});
+
 welcomeForm.addEventListener('submit', (e) => {
     e.preventDefault();
     sessionUser.name = document.getElementById('agentName').value;
@@ -409,6 +578,7 @@ welcomeForm.addEventListener('submit', (e) => {
     calculatorWrap.classList.remove('hidden');
     quoteSidebar.classList.remove('hidden');
     
+    setAppLanguage(currentLang); // Initial UI run
     updateUI();
 });
 

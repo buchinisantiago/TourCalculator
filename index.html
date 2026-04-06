@@ -14,26 +14,36 @@
 <body>
     <div class="container">
         <!-- Banner and Admin action -->
-        <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end;">
-            <a href="admin.html" class="btn btn-secondary" style="border: 1px solid var(--border-color);"><i class="ph ph-gear"></i> Panel Administrador</a>
+        <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 1rem;">
+            <div id="language-switcher" style="display: flex; gap: 0.6rem; align-items: center; background: rgba(255,255,255,0.05); padding: 0.4rem 0.8rem; border-radius: 2rem; border: 1px solid var(--border-color);">
+                <button class="lang-flag" data-lang="ESP" title="Español" style="background:none; border:none; cursor:pointer; font-size:1.4rem; padding:0; transition: transform 0.2s;">🇪🇸</button>
+                <button class="lang-flag" data-lang="ENG" title="English" style="background:none; border:none; cursor:pointer; font-size:1.4rem; padding:0; transition: transform 0.2s;">🇬🇧</button>
+                <button class="lang-flag" data-lang="ITA" title="Italiano" style="background:none; border:none; cursor:pointer; font-size:1.4rem; padding:0; transition: transform 0.2s;">🇮🇹</button>
+            </div>
+            <a href="admin.html" class="btn btn-secondary" style="border: 1px solid var(--border-color);"><i class="ph ph-gear"></i> <span class="i18n" data-key="admin_panel">Panel Administrador</span></a>
         </div>
+        
+        <style>
+            .lang-flag:hover { transform: scale(1.2); }
+            .lang-flag.active { filter: drop-shadow(0 0 5px var(--primary)); transform: scale(1.1); }
+        </style>
 
         <!-- Welcome Step (Identify) -->
         <main id="welcome-step" class="glass-panel animate-fade-in" style="max-width: 500px; margin: 10vh auto; text-align: center;">
             <header>
-                <h1>Tour Calculator</h1>
-                <p>Por favor identifícate para continuar</p>
+                <h1 class="i18n" data-key="welcome_title">Tour Calculator</h1>
+                <p class="i18n" data-key="welcome_subtitle">Por favor identifícate para continuar</p>
             </header>
             <form id="welcome-form" style="text-align: left; margin-top: 2rem;">
                 <div class="input-group">
-                    <label for="agentName">Nombre</label>
+                    <label for="agentName" class="i18n" data-key="name_label">Nombre</label>
                     <input type="text" id="agentName" required placeholder="Tu nombre">
                 </div>
                 <div class="input-group" style="margin-top: 1rem;">
-                    <label for="agentEmail">Email</label>
+                    <label for="agentEmail" class="i18n" data-key="email_label">Email</label>
                     <input type="email" id="agentEmail" required placeholder="tu@email.com">
                 </div>
-                <button type="submit" class="btn btn-primary full-width" style="margin-top: 2rem;">Ingresar a la Calculadora <i class="ph ph-arrow-right"></i></button>
+                <button type="submit" class="btn btn-primary full-width i18n" data-key="enter_btn" style="margin-top: 2rem;">Ingresar a la Calculadora <i class="ph ph-arrow-right"></i></button>
             </form>
         </main>
 
@@ -47,18 +57,18 @@
             <form id="calculator-form">
                 <!-- Section 1 -->
                 <div class="form-section">
-                    <h2><i class="ph ph-info"></i> Basic Info</h2>
+                    <h2 class="i18n" data-key="basic_info"><i class="ph ph-info"></i> Basic Info</h2>
                     <div class="form-grid">
                         <div class="input-group">
-                            <label>🚢 Is a Disembarking tour? (Cruise)</label>
+                            <label class="i18n" data-key="is_cruise">🚢 Is a Disembarking tour? (Cruise)</label>
                             <div id="disembarking-radio-group" class="radio-group">
                                 <label class="radio-card">
                                     <input type="radio" name="isDisembarking" value="Yes" required>
-                                    <div class="card-content">Yes</div>
+                                    <div class="card-content i18n" data-key="yes">Yes</div>
                                 </label>
                                 <label class="radio-card">
                                     <input type="radio" name="isDisembarking" value="No" checked required>
-                                    <div class="card-content">No</div>
+                                    <div class="card-content i18n" data-key="no">No</div>
                                 </label>
                             </div>
                             <p id="luggage-note" class="hidden" style="font-size:0.75rem; border-left:2.5px solid var(--primary); padding-left:0.5rem; margin-top:0.5rem; color:var(--text-muted); line-height: 1.3;">
@@ -67,12 +77,12 @@
                         </div>
 
                         <div class="input-group">
-                            <label for="pax">How many pax?</label>
+                            <label for="pax" class="i18n" data-key="pax_label">How many pax?</label>
                             <input type="number" id="pax" min="1" max="200" value="1" required>
                         </div>
 
                         <div class="input-group">
-                            <label for="language">Language</label>
+                            <label for="language" class="i18n" data-key="lang_label">Language</label>
                             <select id="language" required>
                                 <option value="ENG">🇬🇧 ENG</option>
                                 <option value="ESP">🇪🇸 ESP</option>
@@ -84,17 +94,17 @@
                         </div>
 
                         <div class="input-group">
-                            <label for="date">Date</label>
+                            <label for="date" class="i18n" data-key="date_label">Date</label>
                             <input type="date" id="date" value="2026-11-08" required>
                         </div>
 
                         <div class="input-group">
-                            <label for="startTime">Start Time</label>
+                            <label for="startTime" class="i18n" data-key="time_label">Start Time</label>
                             <input type="time" id="startTime" value="10:00" required>
                         </div>
 
                         <div class="input-group full-width">
-                            <label>Which tour do you want to quote?</label>
+                            <label class="i18n" data-key="which_tour">Which tour do you want to quote?</label>
                             <div class="tour-options radio-group" id="tour-options-container">
                                 <!-- Tours are injected here from app.js -->
                             </div>
@@ -109,27 +119,27 @@
 
                 <!-- Section 2: Custom Tour -->
                 <div id="custom-tour-section" class="form-section hidden animate-fade-in">
-                    <h2><i class="ph ph-faders"></i> Custom Tour Options</h2>
+                    <h2 class="i18n" data-key="custom_options"><i class="ph ph-faders"></i> Custom Tour Options</h2>
                     <div class="form-grid">
                         <div class="input-group">
-                            <label for="customHours">How many hours?</label>
+                            <label for="customHours" class="i18n" data-key="hours_label">How many hours?</label>
                             <input type="number" id="customHours" min="1" max="10" value="4">
                         </div>
                         <div class="input-group">
-                            <label>Do they need a tour guide?</label>
+                            <label class="i18n" data-key="needs_guide">Do they need a tour guide?</label>
                             <div class="radio-group">
                                 <label class="radio-card">
                                     <input type="radio" name="needsGuide" value="true" checked>
-                                    <div class="card-content">Yes</div>
+                                    <div class="card-content i18n" data-key="yes">Yes</div>
                                 </label>
                                 <label class="radio-card">
                                     <input type="radio" name="needsGuide" value="false">
-                                    <div class="card-content">No</div>
+                                    <div class="card-content i18n" data-key="no">No</div>
                                 </label>
                             </div>
                         </div>
                         <div class="input-group full-width">
-                            <label>Venues (Optional)</label>
+                            <label class="i18n" data-key="venues_label">Venues (Optional)</label>
                             <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
                                 <select id="venue1" class="venue-select">
                                     <option value="No Venue">No Venue</option>
@@ -147,6 +157,10 @@
                                     <!-- Dynamic options injected here -->
                                 </select>
                             </div>
+                        </div>
+                        <div id="custom-itinerary-container" class="input-group full-width hidden animate-fade-in" style="margin-top: 1rem;">
+                            <label for="customItinerary" class="i18n" data-key="itinerary_label">Itinerario / Notas especiales</label>
+                            <textarea id="customItinerary" rows="3" placeholder="..." style="width: 100%; padding: 0.75rem 1rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 0.75rem; color: var(--text-main); font-family: inherit; font-size: 0.9rem; resize: vertical;"></textarea>
                         </div>
                     </div>
                 </div>
@@ -189,9 +203,9 @@
                     </div>
                 </div>
                 <div id="save-bar" class="hidden" style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
-                    <button id="btn-copy" class="btn btn-secondary" style="flex: 1;"><i class="ph ph-copy"></i> Copy Text</button>
-                    <button id="btn-email" class="btn btn-secondary" style="flex: 1; border-color: var(--primary); color: var(--primary);"><i class="ph ph-envelope"></i> Email Invoice</button>
-                    <button id="btn-save" class="btn btn-primary" style="flex: 1.2;"><i class="ph ph-floppy-disk"></i> Save & Record</button>
+                    <button id="btn-copy" class="btn btn-secondary i18n" data-key="copy_btn" style="flex: 1;"><i class="ph ph-copy"></i> Copy Text</button>
+                    <button id="btn-email" class="btn btn-secondary i18n" data-key="email_btn" style="flex: 1; border-color: var(--primary); color: var(--primary);"><i class="ph ph-envelope"></i> Email Invoice</button>
+                    <button id="btn-save" class="btn btn-primary i18n" data-key="save_btn" style="flex: 1.2;"><i class="ph ph-floppy-disk"></i> Save & Record</button>
                 </div>
             </div>
             <div id="save-status" style="text-align: center; font-size: 0.85rem; color: var(--text-muted);"></div>
