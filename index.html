@@ -15,12 +15,13 @@
     <div class="container">
         <!-- Banner and Admin action -->
         <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 1rem;">
-            <div id="language-switcher" style="display: flex; gap: 0.6rem; align-items: center; background: rgba(255,255,255,0.05); padding: 0.4rem 0.8rem; border-radius: 2rem; border: 1px solid var(--border-color);">
-                <button class="lang-flag" data-lang="ESP" title="Español" style="background:none; border:none; cursor:pointer; font-size:1.4rem; padding:0; transition: transform 0.2s;">🇪🇸</button>
-                <button class="lang-flag" data-lang="ENG" title="English" style="background:none; border:none; cursor:pointer; font-size:1.4rem; padding:0; transition: transform 0.2s;">🇬🇧</button>
-                <button class="lang-flag" data-lang="ITA" title="Italiano" style="background:none; border:none; cursor:pointer; font-size:1.4rem; padding:0; transition: transform 0.2s;">🇮🇹</button>
+            <div id="language-switcher" style="display: flex; gap: 0.8rem; align-items: center; background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 2rem; border: 1px solid var(--border-color);">
+                <span class="i18n" data-key="lang_label" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">Language</span>
+                <button class="lang-flag" data-lang="ESP" title="Español" style="background:none; border:none; cursor:pointer; font-size:1.5rem; padding:0; transition: transform 0.2s; display: flex; align-items: center;">🇪🇸</button>
+                <button class="lang-flag" data-lang="ENG" title="English" style="background:none; border:none; cursor:pointer; font-size:1.5rem; padding:0; transition: transform 0.2s; display: flex; align-items: center;">🇬🇧</button>
+                <button class="lang-flag" data-lang="ITA" title="Italiano" style="background:none; border:none; cursor:pointer; font-size:1.5rem; padding:0; transition: transform 0.2s; display: flex; align-items: center;">🇮🇹</button>
             </div>
-            <a href="admin.html" class="btn btn-secondary" style="border: 1px solid var(--border-color);"><i class="ph ph-gear"></i> <span class="i18n" data-key="admin_panel">Panel Administrador</span></a>
+            <a href="admin.html" class="btn btn-secondary" style="border: 1px solid var(--border-color); padding: 0.5rem 1rem; font-size: 0.85rem;"><i class="ph ph-gear"></i> <span class="i18n" data-key="admin_panel">Panel Administrador</span></a>
         </div>
         
         <style>
@@ -71,7 +72,7 @@
                                     <div class="card-content i18n" data-key="no">No</div>
                                 </label>
                             </div>
-                            <p id="luggage-note" class="hidden" style="font-size:0.75rem; border-left:2.5px solid var(--primary); padding-left:0.5rem; margin-top:0.5rem; color:var(--text-muted); line-height: 1.3;">
+                            <p id="luggage-note" class="hidden i18n" data-key="luggage_note" style="font-size:0.75rem; border-left:2.5px solid var(--primary); padding-left:0.5rem; margin-top:0.5rem; color:var(--text-muted); line-height: 1.3;">
                                 🧳 <strong>Capacidad Reducida:</strong> Para tours de desembarque con maletas, se calcula un uso máximo del 70% de los asientos del bus.
                             </p>
                         </div>

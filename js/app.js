@@ -109,7 +109,8 @@ const TRANSLATIONS = {
         save_btn: "Save & Record",
         other: "OTHER",
         yes: "Yes",
-        no: "No"
+        no: "No",
+        luggage_note: "🧳 <strong>Reduced Capacity:</strong> For disembarking tours with luggage, a max of 70% of bus seats are used."
     },
     ITA: {
         admin_panel: "Pannello Amministratore",
@@ -121,7 +122,7 @@ const TRANSLATIONS = {
         basic_info: "Informazioni di Base",
         is_cruise: "🚢 È un tour di sbarco? (Crociera)",
         pax_label: "Passeggeri (Pax)",
-        lang_label: "Lingua del Tour",
+        lang_label: "Lingua",
         date_label: "Data",
         time_label: "Ora di Inizio",
         which_tour: "Quale tour vuoi quotare?",
@@ -159,7 +160,7 @@ function setAppLanguage(lang) {
             if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
                 el.placeholder = t[key];
             } else {
-                el.textContent = t[key];
+                el.innerHTML = t[key]; // Changed from textContent to allow <strong> in luggage_note
             }
         }
     });
