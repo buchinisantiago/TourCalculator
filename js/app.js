@@ -39,6 +39,8 @@ let currentQuote = null; // Store the latest calculation
 let pricingConfig = null; // Store dynamic pricing from DB
 let sessionUser = { name: '', email: '' }; // Store the authenticated agent from step 1
 let currentLang = 'ESP'; // Global state for UI language
+let isAdminMode = false; // Default to Customer View
+const ADMIN_PW = 'Cached10s!';
 
 const TRANSLATIONS = {
     ESP: {
@@ -145,7 +147,12 @@ const TRANSLATIONS = {
         save_btn: "Salva e Registra",
         other: "ALTRO",
         yes: "Sì",
-        no: "No"
+        no: "No",
+        luggage_note: "🧳 <strong>Capacità Ridotta:</strong> Per i tour di sbarco con bagagli, viene utilizzato al massimo el 70% dei posti sull'autobus.",
+        auth_required: "Password richiesta",
+        auth_subtitle: "Inserisci la password per visualizzare il dettaglio dei prezzi.",
+        cancel: "Annulla",
+        confirm: "Conferma"
     }
 };
 
@@ -294,7 +301,7 @@ function updateUI() {
         breakdownLines.innerHTML += `
             <div class="ticket-line">
                 <span class="bold">${guideLabel}:</span>
-                <span>DKK ${formatCurrency(result.breakdown.guidePrice)}</span>
+                <span class="${!isAdminMode ? 'hidden' : ''}">DKK ${formatCurrency(result.breakdown.guidePrice)}</span>
             </div>
             <div style="font-size: 0.7rem; color: var(--text-muted); font-style: italic; margin-top: -0.5rem; margin-bottom: 0.5rem; line-height: 1.2;">
                 ${t.extra_note}
@@ -305,7 +312,7 @@ function updateUI() {
         breakdownLines.innerHTML += `
             <div class="ticket-line">
                 <span class="bold">${t.bus_label} (${result.breakdown.busCount}× ${result.breakdown.busType}):</span>
-                <span>DKK ${formatCurrency(result.breakdown.busPrice)}</span>
+                <span class="${!isAdminMode ? 'hidden' : ''}">DKK ${formatCurrency(result.breakdown.busPrice)}</span>
             </div>`;
     }
     
@@ -329,16 +336,18 @@ function updateUI() {
         });
     }
     
-    // Add Subtotal and Margin
-    breakdownLines.innerHTML += `
-        <div class="ticket-line" style="margin-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 0.5rem;">
-            <span class="bold">${t.net_total}:</span>
-            <span>DKK ${formatCurrency(result.breakdown.netTotal)}</span>
-        </div>
-        <div class="ticket-line">
-            <span class="bold">${t.markup} (${result.breakdown.markupPercent}%):</span>
-            <span>DKK ${formatCurrency(result.breakdown.marginValue)}</span>
-        </div>`;
+    // Add Subtotal and Margin (Admin only)
+    if (isAdminMode) {
+        breakdownLines.innerHTML += `
+            <div class="ticket-line" style="margin-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 0.5rem;">
+                <span class="bold">${t.net_total}:</span>
+                <span>DKK ${formatCurrency(result.breakdown.netTotal)}</span>
+            </div>
+            <div class="ticket-line">
+                <span class="bold">${t.markup} (${result.breakdown.markupPercent}%):</span>
+                <span>DKK ${formatCurrency(result.breakdown.marginValue)}</span>
+            </div>`;
+    }
 }
 
 // ---- EVENT LISTENERS ----
@@ -370,20 +379,22 @@ btnCopy.addEventListener('click', () => {
 
     txt += `BREAKDOWN:\n`;
     if (b.guidePrice > 0) {
-        txt += `- ${b.guideCount > 1 ? t.guides_label : t.guide_label} (${b.guideHours}h): DKK ${formatCurrency(b.guidePrice)}\n`;
+        txt += `- ${b.guideCount > 1 ? t.guides_label : t.guide_label} (${b.guideHours}h)${isAdminMode ? ': DKK ' + formatCurrency(b.guidePrice) : ''}\n`;
         txt += `  (${t.extra_note})\n`;
     }
-    if (b.busPrice > 0) txt += `- ${t.bus_label} (${b.busCount}× ${b.busType}): DKK ${formatCurrency(b.busPrice)}\n`;
+    if (b.busPrice > 0) txt += `- ${t.bus_label} (${b.busCount}× ${b.busType})${isAdminMode ? ': DKK ' + formatCurrency(b.busPrice) : ''}\n`;
     
     if (b.venues.length > 0) {
         txt += `- Venues:\n`;
         b.venues.forEach(v => {
-            txt += `  * ${v.venue} (${d.pax}x${v.pricePerPax}): DKK ${formatCurrency(v.subtotal)}\n`;
+            txt += `  * ${v.venue}${isAdminMode ? ' (' + d.pax + 'x' + v.pricePerPax + '): DKK ' + formatCurrency(v.subtotal) : ''}\n`;
         });
     }
     
-    txt += `\n${t.net_total}:     DKK ${formatCurrency(b.netTotal)}\n`;
-    txt += `${t.markup} (${b.markupPercent}%): DKK ${formatCurrency(b.marginValue)}\n`;
+    if (isAdminMode) {
+        txt += `\n${t.net_total}:     DKK ${formatCurrency(b.netTotal)}\n`;
+        txt += `${t.markup} (${b.markupPercent}%): DKK ${formatCurrency(b.marginValue)}\n`;
+    }
 
     txt += `\nTOTAL: DKK ${formatCurrency(result.totalPrice)}\n`;
     
@@ -565,6 +576,48 @@ btnSave.addEventListener('click', async () => {
 });
 
 // ---- INIT & WELCOME FLOW ----
+const btnVisibility = document.getElementById('btn-visibility');
+const securityModal = document.getElementById('security-modal');
+const securityInput = document.getElementById('input-security-pw');
+const securityConfirm = document.getElementById('btn-security-confirm');
+const securityCancel = document.getElementById('btn-security-cancel');
+const securityError = document.getElementById('security-error');
+
+btnVisibility.addEventListener('click', () => {
+    if (isAdminMode) {
+        // Toggle back to customer view
+        isAdminMode = false;
+        btnVisibility.innerHTML = '<i class="ph ph-eye-slash" style="font-size: 1.5rem;"></i>';
+        updateUI();
+    } else {
+        // Show password modal
+        securityModal.classList.remove('hidden');
+        securityInput.value = '';
+        securityError.classList.add('hidden');
+        securityInput.focus();
+    }
+});
+
+securityCancel.addEventListener('click', () => {
+    securityModal.classList.add('hidden');
+});
+
+function verifySecurityPassword() {
+    if (securityInput.value === ADMIN_PW) {
+        isAdminMode = true;
+        securityModal.classList.add('hidden');
+        btnVisibility.innerHTML = '<i class="ph ph-eye" style="font-size: 1.5rem;"></i>';
+        updateUI();
+    } else {
+        securityError.classList.remove('hidden');
+    }
+}
+
+securityConfirm.addEventListener('click', verifySecurityPassword);
+securityInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') verifySecurityPassword();
+});
+
 document.querySelectorAll('.lang-flag').forEach(btn => {
     btn.addEventListener('click', () => setAppLanguage(btn.getAttribute('data-lang')));
 });
