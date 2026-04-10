@@ -399,7 +399,7 @@ function updateUI() {
         result.breakdown.venues.forEach(v => {
             breakdownLines.innerHTML += `
                 <div class="ticket-line">
-                    <span class="bold">↳ ${v.venue} <small class="${!isAdminMode ? 'hidden' : ''}">(${result.summary.pax}×${v.pricePerPax})</small></span>
+                    <span class="bold">↳ ${v.venue} <small>${isAdminMode ? `(${result.summary.pax}×${v.pricePerPax})` : `(x${result.summary.pax})`}</small></span>
                     <span class="${!isAdminMode ? 'hidden' : ''}">DKK ${formatCurrency(v.subtotal)}</span>
                 </div>`;
         });
@@ -456,7 +456,7 @@ btnCopy.addEventListener('click', () => {
     if (b.venues.length > 0) {
         txt += `- Venues:\n`;
         b.venues.forEach(v => {
-            txt += `  * ${v.venue}${isAdminMode ? ' (' + d.pax + 'x' + v.pricePerPax + '): DKK ' + formatCurrency(v.subtotal) : ''}\n`;
+            txt += `  * ${v.venue} ${isAdminMode ? '(' + d.pax + 'x' + v.pricePerPax + '): DKK ' + formatCurrency(v.subtotal) : '(x' + d.pax + ')'}\n`;
         });
     }
     
