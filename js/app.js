@@ -433,7 +433,7 @@ btnCopy.addEventListener('click', () => {
     const cleanDate = new Date(d.date).toLocaleDateString(currentLang === 'ENG' ? 'en-US' : 'es-ES');
     const t = TRANSLATIONS[currentLang];
 
-    let txt = `FREE TOUR COPENHAGEN — QUOTE\n`;
+    let txt = `B2B TOUR COPENHAGEN — QUOTE\n`;
     txt += `----------------------------------\n`;
     txt += `FROM:          ${data.name} (${data.email})\n`;
     txt += `TOUR:          ${d.tour === 'OTHER' ? t.other : d.tour}\n`;
