@@ -59,14 +59,15 @@
 <body>
     <div class="admin-container">
         <!-- HEADER -->
-        <header class="header-admin">
-            <div>
-                <h1><i class="ph ph-gear"></i> Admin Settings</h1>
-                <p>Configuración de precios de calculadoras</p>
+        <header class="header-admin" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
+            <img src="img/logo FTC.jpeg" alt="Logo" style="width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--primary);">
+            <div style="flex-grow: 1;">
+                <h1 style="margin-bottom: 0.25rem;"><i class="ph ph-gear"></i> Admin Settings</h1>
+                <p style="margin-bottom: 0;">Configuración de precios de calculadoras</p>
             </div>
-            <div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
                 <a href="index.html" class="nav-link"><i class="ph ph-arrow-left"></i> Volver a Calculadora</a>
-                <button id="btn-logout" class="btn btn-secondary hidden" style="margin-left: 1rem;">Cerrar sesión</button>
+                <button id="btn-logout" class="btn btn-secondary hidden" style="padding: 0.5rem 1rem;">Cerrar sesión</button>
             </div>
         </header>
 
@@ -202,7 +203,7 @@
                     <h2>🚌 Reglas de Tarifas de Transporte y Guías</h2>
                 </div>
                 <p>Aquí modificas los precios base por hora facturada.</p>
-                <div style="margin: 0.75rem 0; padding: 0.6rem 1rem; background: rgba(59,130,246,0.1); border-left: 3px solid var(--primary); border-radius: 0 6px 6px 0; font-size: 0.85rem; color: var(--text-muted);">
+                <div style="margin: 0.75rem 0; padding: 0.6rem 1rem; background: rgba(255,107,0,0.1); border-left: 3px solid var(--primary); border-radius: 0 6px 6px 0; font-size: 0.85rem; color: var(--text-muted);">
                     <strong style="color: var(--primary);"><i class="ph ph-info"></i> Nota sobre Guías:</strong>
                     Los guías se pagan <strong>+0.5 hs</strong> extra por encima de la duración del tour (tiempo de llegada anticipada, reunión y recolección de grupo). Este ajuste se aplica automáticamente en todos los cálculos.
                 </div>

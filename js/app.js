@@ -320,7 +320,7 @@ function updateUI() {
     // Add Custom Itinerary to Ticket if present
     if (data.customItinerary && data.tour === 'OTHER') {
         breakdownLines.innerHTML += `
-            <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; font-size: 0.85rem; border-left: 3px solid var(--primary);">
+            <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(255, 107, 0, 0.1); border-radius: 8px; font-size: 0.85rem; border-left: 3px solid var(--primary);">
                 <div style="font-weight: 600; font-size: 0.7rem; text-transform: uppercase; color: var(--primary); margin-bottom: 0.25rem;">${t.itinerary_label}</div>
                 <div style="color: var(--text-main); font-style: italic; white-space: pre-wrap;">"${data.customItinerary}"</div>
             </div>`;
@@ -481,7 +481,7 @@ btnEmail.addEventListener('click', async () => {
 
         const canvas = await html2canvas(ticketElement, { 
             scale: 2,
-            backgroundColor: '#0f172a' // match theme
+            backgroundColor: '#0a0a0a' // match theme
         });
         const imgData = canvas.toDataURL('image/png');
         
