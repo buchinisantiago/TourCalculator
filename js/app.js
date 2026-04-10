@@ -76,7 +76,12 @@ const TRANSLATIONS = {
         save_btn: "Guardar y Registrar",
         other: "OTRO",
         yes: "Sí",
-        no: "No"
+        no: "No",
+        luggage_note: "🧳 <strong>Capacidad Reducida:</strong> Para tours de desembarque con maletas, se calcula un uso máximo del 70% de los asientos del bus.",
+        auth_required: "Contraseña requerida",
+        auth_subtitle: "Ingresa la contraseña para ver el desglose de precios.",
+        cancel: "Cancelar",
+        confirm: "Confirmar"
     },
     ENG: {
         admin_panel: "Admin Panel",
