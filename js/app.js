@@ -598,8 +598,45 @@ btnModalConfirm.addEventListener('click', async () => {
     saveStatus.textContent = "Creating Invoice PDF...";
     
     try {
+        // Calculate variables first
+        const fullPrice = result.discountAmount ? result.totalPrice + result.discountAmount : result.totalPrice;
+        const discountAmt = result.discountAmount || 0;
+        const discountPct = result.discountPercent || 0;
+        const netPrice = result.totalPrice; // already discounted
+        const depositAmount = Math.round(netPrice / 2);
+        const remainingAmount = netPrice - depositAmount;
+        const avgPaxPriceFull = Math.round(fullPrice / d.pax);
+
+        // Save invoice record first to get sequential ID for the PDF
+        const { data: insertedInv, error: insertError } = await supabase.from('invoices').insert({
+            agent_name: sessionUser.name,
+            agent_email: sessionUser.email,
+            client_name: legalName,
+            client_cvr: cvr,
+            client_address: address,
+            tour_name: d.tour,
+            tour_date: d.date,
+            tour_time: d.startTime,
+            pax: d.pax,
+            full_amount: fullPrice,
+            discount_pct: discountPct,
+            discount_amount: discountAmt,
+            net_amount: netPrice,
+            deposit_amount: depositAmount,
+            remaining_amount: remainingAmount,
+            notes: notes,
+            status: 'deposit_sent'
+        }).select('id').single();
+
+        if (insertError) throw insertError;
+
+        // Format sequential invoice number: CPH-001, CPH-002...
+        const invNo = "CPH-" + String(insertedInv.id).padStart(3, '0');
+        
+        // Update the record with the formatted invoice number
+        await supabase.from('invoices').update({ invoice_no: invNo }).eq('id', insertedInv.id);
+
         // --- POPULATE INVOICE TEMPLATE ---
-        const invNo = "CPH-" + Date.now().toString().slice(-5);
         document.getElementById('pdf-inv-no').textContent = invNo;
         
         const now = new Date();
@@ -614,15 +651,7 @@ btnModalConfirm.addEventListener('click', async () => {
         document.getElementById('pdf-billed-address').textContent = address;
         
         const tourNameToDisplay = d.tour === 'OTHER' ? t.other : d.tour;
-        
-        // Price breakdown: full price BEFORE the discount was applied
-        const fullPrice = result.discountAmount ? result.totalPrice + result.discountAmount : result.totalPrice;
-        const discountAmt = result.discountAmount || 0;
-        const discountPct = result.discountPercent || 0;
-        const netPrice = result.totalPrice; // already discounted
-        const depositAmount = Math.round(netPrice / 2);
-        const remainingAmount = netPrice - depositAmount;
-        const avgPaxPriceFull = Math.round(fullPrice / d.pax);
+
         
         const tourDate = new Date(d.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
@@ -718,28 +747,6 @@ btnModalConfirm.addEventListener('click', async () => {
         });
 
         if (functionError) throw functionError;
-
-        // Save invoice record to DB
-        await supabase.from('invoices').insert({
-            invoice_no: invNo,
-            agent_name: sessionUser.name,
-            agent_email: sessionUser.email,
-            client_name: legalName,
-            client_cvr: cvr,
-            client_address: address,
-            tour_name: d.tour,
-            tour_date: d.date,
-            tour_time: d.startTime,
-            pax: d.pax,
-            full_amount: fullPrice,
-            discount_pct: discountPct,
-            discount_amount: discountAmt,
-            net_amount: netPrice,
-            deposit_amount: depositAmount,
-            remaining_amount: remainingAmount,
-            notes: notes,
-            status: 'deposit_sent'
-        });
 
         saveStatus.style.color = 'var(--primary)';
         saveStatus.textContent = "✅ Invoice sent — 50% deposit requested.";
