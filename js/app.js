@@ -40,6 +40,8 @@ let sessionUser = { name: '', email: '' }; // Store the authenticated agent from
 let currentLang = 'ESP'; // Global state for UI language
 let isAdminMode = false; // Default to Customer View
 const ADMIN_PW = 'Cached10s!';
+let activeOffer = null; // Active promotional offer
+let offerClaimed = false; // Whether this session has claimed the offer
 
 const TRANSLATIONS = {
     ESP: {
@@ -326,6 +328,21 @@ function updateUI() {
 
     const result = calculateQuote(data, pricingConfig);
 
+    // Apply active offer discount if claimed
+    let discountAmount = 0;
+    let discountPercent = 0;
+    if (offerClaimed && activeOffer && activeOffer.enabled) {
+        const validUntil = activeOffer.valid_until ? new Date(activeOffer.valid_until) : null;
+        if (!validUntil || validUntil >= new Date()) {
+            discountPercent = activeOffer.discount_percent || 0;
+            discountAmount = Math.round(result.totalPrice * discountPercent / 100);
+            result.totalPrice = result.totalPrice - discountAmount;
+            result.discountAmount = discountAmount;
+            result.discountPercent = discountPercent;
+            result.discountLabel = activeOffer.label;
+        }
+    }
+
     if (result.error) {
         errorBox.textContent = result.message || 'Error calculando cotización';
         errorBox.classList.remove('hidden');
@@ -353,6 +370,17 @@ function updateUI() {
     tPax.textContent = result.summary.pax;
     tLang.textContent = result.summary.language;
     tPrice.textContent = formatCurrency(result.totalPrice);
+    
+    // Show discount badge if applied
+    const discountBadge = document.getElementById('ticket-discount-badge');
+    if (discountBadge) {
+        if (result.discountAmount) {
+            discountBadge.innerHTML = `<i class="ph ph-tag"></i> ${result.discountPercent}% OFF applied — saved DKK ${formatCurrency(result.discountAmount)}`;
+            discountBadge.classList.remove('hidden');
+        } else {
+            discountBadge.classList.add('hidden');
+        }
+    }
     
     // Sub-totals calculations
     const perPerson = Math.round(result.totalPrice / result.summary.pax);
@@ -733,6 +761,38 @@ welcomeForm.addEventListener('submit', (e) => {
     
     setAppLanguage(currentLang); // Initial UI run
     updateUI();
+
+    // Show offer popup if active offer exists
+    if (activeOffer && activeOffer.enabled) {
+        const validUntil = activeOffer.valid_until ? new Date(activeOffer.valid_until) : null;
+        const isValid = !validUntil || validUntil >= new Date();
+        if (isValid && !sessionStorage.getItem('offerSeen')) {
+            setTimeout(() => showOfferPopup(activeOffer), 800);
+        }
+    }
+});
+
+function showOfferPopup(offer) {
+    sessionStorage.setItem('offerSeen', '1');
+    const popup = document.getElementById('offer-popup');
+    if (!popup) return;
+    document.getElementById('offer-popup-discount').textContent = offer.discount_percent + '%';
+    document.getElementById('offer-popup-label').textContent = offer.label || 'Exclusive First-Time Offer';
+    const until = offer.valid_until ? new Date(offer.valid_until).toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }) : null;
+    document.getElementById('offer-popup-expiry').textContent = until ? `Valid until ${until}` : 'Limited time offer';
+    popup.classList.remove('hidden');
+    popup.classList.add('offer-animate-in');
+}
+
+document.addEventListener('click', (e) => {
+    if (e.target.id === 'offer-claim-btn') {
+        offerClaimed = true;
+        document.getElementById('offer-popup').classList.add('hidden');
+        updateUI();
+    }
+    if (e.target.id === 'offer-dismiss-btn') {
+        document.getElementById('offer-popup').classList.add('hidden');
+    }
 });
 
 // Build UI dynamically from configs
@@ -796,11 +856,11 @@ async function initPricing() {
     
     if (error || !data) {
         errorBox.textContent = 'No se pudieron cargar los precios (Asegúrate de haber corrido el SQL). Usando defaults provisionales...';
-        // Provide an empty/fallback config if they haven't set it yet
         pricingConfig = {}; 
     } else {
         errorBox.classList.add('hidden');
         pricingConfig = data;
+        activeOffer = data.active_offer || null;
         buildDynamicUI();
         updateUI();
     }

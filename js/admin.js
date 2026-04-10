@@ -130,6 +130,17 @@ async function loadPrices() {
         if (data.markup_personal !== undefined) markupPersonal.value = data.markup_personal;
         if (data.invoice_emails !== undefined) invoiceEmails.value = data.invoice_emails;
         
+        // Load active offer
+        if (data.active_offer) {
+            const offer = data.active_offer;
+            document.getElementById('offerLabel').value = offer.label || '';
+            document.getElementById('offerDiscount').value = offer.discount_percent || 10;
+            document.getElementById('offerValidUntil').value = offer.valid_until || '';
+            const checkbox = document.getElementById('offerEnabled');
+            checkbox.checked = !!offer.enabled;
+            document.getElementById('offerEnabledLabel').textContent = offer.enabled ? 'Activa ✅' : 'Desactivada';
+        }
+        
         // Store globally for memory
         currentConfig = data;
         
@@ -552,12 +563,18 @@ btnSavePrices.addEventListener('click', async () => {
             }
         });
         
-        // Add markup, venue_prices and custom_tours as explicit named columns
+        // Add markup, venue_prices, custom_tours and active_offer
         priceUpdate.markup_corporate = Number(markupCorporate.value);
         priceUpdate.markup_personal = Number(markupPersonal.value);
         priceUpdate.invoice_emails = invoiceEmails.value.trim();
         priceUpdate.venue_prices = currentConfig.venue_prices || {};
         priceUpdate.custom_tours = currentConfig.custom_tours || {};
+        priceUpdate.active_offer = {
+            label: document.getElementById('offerLabel').value,
+            discount_percent: Number(document.getElementById('offerDiscount').value),
+            valid_until: document.getElementById('offerValidUntil').value || null,
+            enabled: document.getElementById('offerEnabled').checked
+        };
         
         const { error } = await supabase
             .from('pricing_config')
@@ -641,3 +658,131 @@ modalBtnConfirm.addEventListener('click', async () => {
 
 // Run on load
 checkCurrentSession();
+
+// ---- OFFER TOGGLE LABEL ----
+const offerEnabledCheckbox = document.getElementById('offerEnabled');
+if (offerEnabledCheckbox) {
+    offerEnabledCheckbox.addEventListener('change', () => {
+        document.getElementById('offerEnabledLabel').textContent = offerEnabledCheckbox.checked ? 'Activa ✅' : 'Desactivada';
+    });
+}
+
+// ---- MANUAL INVOICE ----
+async function generateAndSendManualInvoice(sendEmail) {
+    const client = document.getElementById('manInvClient').value || 'Unknown Client';
+    const cvr = document.getElementById('manInvCvr').value;
+    const address = document.getElementById('manInvAddress').value;
+    const clientEmail = document.getElementById('manInvEmail').value;
+    const tourDesc = document.getElementById('manInvTour').value || 'Tour Service';
+    const pax = document.getElementById('manInvPax').value || 1;
+    const tourDate = document.getElementById('manInvTourDate').value;
+    const tourTime = document.getElementById('manInvTourTime').value;
+    const amount = Number(document.getElementById('manInvAmount').value) || 0;
+    const discountPct = Number(document.getElementById('manInvDiscountPct').value) || 0;
+    const notes = document.getElementById('manInvNotes').value;
+    const status = document.getElementById('manual-invoice-status');
+
+    const discountAmt = Math.round(amount * discountPct / 100);
+    const subTotal = amount - discountAmt;
+    const tax = Math.round(subTotal * 0.25);
+    const total = subTotal + tax;
+    const formattedDate = tourDate ? new Date(tourDate).toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' }) : 'TBD';
+    const invNo = 'CPH-M' + Date.now().toString().slice(-4);
+    const now = new Date();
+    const issuedDate = now.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const due = new Date(); due.setDate(now.getDate() + 14);
+    const dueDate = due.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
+    // Build PDF using hidden template from index.html — or inject via jsPDF text
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = pdf.internal.pageSize.getWidth();
+
+    pdf.setFontSize(28); pdf.setFont('helvetica','bold'); pdf.text('Invoice', W - 20, 25, { align:'right' });
+    pdf.setFontSize(11); pdf.setFont('helvetica','normal');
+    pdf.text('Invoice No. ' + invNo, W - 20, 32, { align:'right' });
+    pdf.text('Date: ' + issuedDate, W - 20, 38, { align:'right' });
+
+    pdf.setFontSize(22); pdf.setFont('helvetica','bold'); pdf.text('Free Tour CPH', 20, 25);
+    pdf.setFontSize(11); pdf.setFont('helvetica','normal');
+
+    pdf.setFontSize(12); pdf.setFont('helvetica','bold'); pdf.text('Billed to:', W - 80, 55);
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(11);
+    pdf.text(client, W - 80, 62);
+    if (cvr) pdf.text('CVR: ' + cvr, W - 80, 68);
+    if (address) pdf.text(address, W - 80, cvr ? 74 : 68);
+    if (clientEmail) pdf.text(clientEmail, W - 80, cvr ? 80 : 74);
+
+    // Table header
+    let y = 100;
+    pdf.setDrawColor(0); pdf.setLineWidth(0.5);
+    pdf.line(20, y, W-20, y);
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(11);
+    pdf.text('Description', 20, y+8); pdf.text('Pax', 110, y+8); pdf.text('Price/pax', 130, y+8); pdf.text('Amount', W-20, y+8, {align:'right'});
+    pdf.line(20, y+12, W-20, y+12);
+    y += 20;
+    pdf.setFont('helvetica','normal');
+    pdf.text(tourDesc, 20, y);
+    pdf.text(String(pax), 110, y);
+    pdf.text('DKK ' + Math.round(amount/pax), 130, y);
+    pdf.text('DKK ' + amount, W-20, y, {align:'right'});
+    y += 8;
+    pdf.setFontSize(10); pdf.setTextColor(100);
+    pdf.text('📅 Date: ' + formattedDate + '   ⏰ ' + tourTime, 20, y);
+    pdf.setTextColor(0); pdf.setFontSize(11);
+
+    if (discountAmt > 0) {
+        y += 10;
+        pdf.setTextColor(180, 60, 0);
+        pdf.text('Discount (' + discountPct + '% OFF)', 20, y);
+        pdf.text('- DKK ' + discountAmt, W-20, y, {align:'right'});
+        pdf.setTextColor(0);
+    }
+
+    // Totals
+    y += 20;
+    pdf.line(20, y, W-20, y); y += 10;
+    pdf.text('Due Date: ' + dueDate, 20, y);
+    if (notes) { y += 8; pdf.setFontSize(9); pdf.setTextColor(120); pdf.text(notes, 20, y, {maxWidth: 100}); pdf.setTextColor(0); pdf.setFontSize(11); }
+    pdf.text('Sub-Total', W-60, y-8); pdf.text('DKK ' + subTotal, W-20, y-8, {align:'right'});
+    pdf.text('Tax (25%)', W-60, y); pdf.text('DKK ' + tax, W-20, y, {align:'right'});
+    pdf.setFont('helvetica','bold');
+    pdf.text('Total', W-60, y+8); pdf.text('DKK ' + total, W-20, y+8, {align:'right'});
+
+    const pdfBase64 = pdf.output('datauristring').split(',')[1];
+
+    if (!sendEmail) {
+        pdf.save('invoice-' + invNo + '.pdf');
+        status.textContent = '✅ PDF descargado.';
+        status.style.color = 'var(--success)';
+        return;
+    }
+
+    status.textContent = '⏳ Enviando invoice...';
+    status.style.color = 'var(--text-muted)';
+
+    const manualSupa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const toEmails = [clientEmail, 'buchinisantiago@gmail.com'].filter(Boolean);
+
+    const { error: fnErr } = await manualSupa.functions.invoke('super-worker', {
+        body: {
+            agentEmail: 'admin@freetourcph.com',
+            agentName: 'Admin Manual Invoice',
+            tourName: tourDesc,
+            pdfBase64,
+            recipients: toEmails,
+            invoiceDetails: { legalName: client, cvr, address, notes }
+        }
+    });
+
+    if (fnErr) {
+        status.textContent = '❌ Error: ' + fnErr.message;
+        status.style.color = 'var(--danger)';
+    } else {
+        status.textContent = '✅ Invoice enviado a ' + toEmails.join(', ');
+        status.style.color = 'var(--success)';
+    }
+}
+
+document.getElementById('btn-preview-manual-invoice')?.addEventListener('click', () => generateAndSendManualInvoice(false));
+document.getElementById('btn-send-manual-invoice')?.addEventListener('click', () => generateAndSendManualInvoice(true));

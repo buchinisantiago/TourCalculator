@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Tour Copenhagen — Admin Panel</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -231,6 +232,97 @@
                 </div>
             </div>
             
+            <!-- OFFERS MANAGEMENT PANEL -->
+            <div class="glass-panel" style="margin-bottom: 2rem;">
+                <h2>🏷️ Gestión de Ofertas Promocionales</h2>
+                <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom: 1.5rem;">Configurá la oferta que aparece como popup al ingresar a la calculadora.</p>
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label>Etiqueta de la Oferta</label>
+                        <input type="text" id="offerLabel" placeholder="Ej: 10% OFF First Booking" value="10% OFF Your First Booking">
+                    </div>
+                    <div class="input-group">
+                        <label>% Descuento</label>
+                        <input type="number" id="offerDiscount" min="0" max="100" value="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Válida Hasta</label>
+                        <input type="date" id="offerValidUntil">
+                    </div>
+                    <div class="input-group" style="display:flex; align-items:center; gap: 1rem;">
+                        <label style="margin-bottom:0;">Oferta Activa</label>
+                        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                            <input type="checkbox" id="offerEnabled" style="width:20px; height:20px; accent-color: var(--primary);">
+                            <span id="offerEnabledLabel" style="color:var(--text-muted); font-size:0.85rem;">Desactivada</span>
+                        </label>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem; padding: 0.75rem 1rem; background: rgba(255,107,0,0.08); border-radius: 8px; border-left: 3px solid var(--primary); font-size: 0.85rem; color: var(--text-muted);">
+                    <strong style="color:var(--primary);">Nota:</strong> El popup aparece la primera vez que el agente ingresa a la calculadora en cada sesión. Al hacer clic en "Claim", el descuento se aplica automáticamente al total del quote.
+                </div>
+            </div>
+
+            <!-- MANUAL INVOICE CREATOR -->
+            <div class="glass-panel" style="margin-bottom: 2rem;">
+                <h2>🧾 Crear Invoice Manual</h2>
+                <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom: 1.5rem;">Generá un invoice personalizado para casos especiales o descuentos fuera del sistema.</p>
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label>Nombre Legal del Cliente</label>
+                        <input type="text" id="manInvClient" placeholder="Ej: Sunshine Tours ApS">
+                    </div>
+                    <div class="input-group">
+                        <label>CVR / VAT (opcional)</label>
+                        <input type="text" id="manInvCvr" placeholder="Ej: 12345678">
+                    </div>
+                    <div class="input-group">
+                        <label>Dirección</label>
+                        <input type="text" id="manInvAddress" placeholder="Ej: Main St 1, Copenhagen">
+                    </div>
+                    <div class="input-group">
+                        <label>Email del Cliente</label>
+                        <input type="email" id="manInvEmail" placeholder="cliente@empresa.com">
+                    </div>
+                    <div class="input-group">
+                        <label>Descripción del Tour / Servicio</label>
+                        <input type="text" id="manInvTour" placeholder="Ej: Tivoli and Citytour — 12 pax">
+                    </div>
+                    <div class="input-group">
+                        <label>Pax</label>
+                        <input type="number" id="manInvPax" value="1" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Fecha del Tour</label>
+                        <input type="date" id="manInvTourDate">
+                    </div>
+                    <div class="input-group">
+                        <label>Hora de Inicio</label>
+                        <input type="time" id="manInvTourTime" value="10:00">
+                    </div>
+                    <div class="input-group">
+                        <label>Importe Total (DKK, sin IVA)</label>
+                        <input type="number" id="manInvAmount" placeholder="Ej: 8500" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Descuento % (opcional)</label>
+                        <input type="number" id="manInvDiscountPct" placeholder="0" min="0" max="100" value="0">
+                    </div>
+                </div>
+                <div class="input-group" style="margin-top: 1rem;">
+                    <label>Notas Extra</label>
+                    <textarea id="manInvNotes" rows="2" style="width:100%; padding:0.75rem 1rem; border-radius:6px; border:1px solid var(--border-color); background:rgba(0,0,0,0.2); color:var(--text-main); font-family:inherit;" placeholder="Condiciones especiales, notas de pago, etc."></textarea>
+                </div>
+                <div style="margin-top: 1.5rem; display:flex; gap: 1rem; flex-wrap: wrap;">
+                    <button id="btn-preview-manual-invoice" class="btn btn-secondary">
+                        <i class="ph ph-eye"></i> Previsualizar PDF
+                    </button>
+                    <button id="btn-send-manual-invoice" class="btn btn-primary" style="background: linear-gradient(135deg, #FF6B00, #cc5500);">
+                        <i class="ph ph-paper-plane-right"></i> Generar y Enviar Invoice
+                    </button>
+                </div>
+                <div id="manual-invoice-status" style="margin-top: 1rem; font-size: 0.9rem;"></div>
+            </div>
+
         </main>
 
         <!-- STICKY SAVE BAR -->
