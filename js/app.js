@@ -599,7 +599,8 @@ btnModalConfirm.addEventListener('click', async () => {
     
     try {
         // --- POPULATE INVOICE TEMPLATE ---
-        document.getElementById('pdf-inv-no').textContent = "CPH-" + Date.now().toString().slice(-4) + Math.floor(Math.random()*10);
+        const invNo = "CPH-" + Date.now().toString().slice(-5);
+        document.getElementById('pdf-inv-no').textContent = invNo;
         
         const now = new Date();
         document.getElementById('pdf-inv-date').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -613,33 +614,63 @@ btnModalConfirm.addEventListener('click', async () => {
         document.getElementById('pdf-billed-address').textContent = address;
         
         const tourNameToDisplay = d.tour === 'OTHER' ? t.other : d.tour;
-        const avgPaxPrice = Math.round(result.totalPrice / d.pax);
+        
+        // Price breakdown: full price BEFORE the discount was applied
+        const fullPrice = result.discountAmount ? result.totalPrice + result.discountAmount : result.totalPrice;
+        const discountAmt = result.discountAmount || 0;
+        const discountPct = result.discountPercent || 0;
+        const netPrice = result.totalPrice; // already discounted
+        const depositAmount = Math.round(netPrice / 2);
+        const remainingAmount = netPrice - depositAmount;
+        const avgPaxPriceFull = Math.round(fullPrice / d.pax);
         
         const tourDate = new Date(d.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-        document.getElementById('pdf-table-body').innerHTML = `
+        let tableHTML = `
             <tr>
-                <td style="padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px; font-weight: 600;">${tourNameToDisplay}</td>
-                <td style="text-align: center; padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">${d.pax}</td>
-                <td style="text-align: right; padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">DKK ${formatCurrency(avgPaxPrice)}</td>
-                <td style="text-align: right; padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">DKK ${formatCurrency(result.totalPrice)}</td>
+                <td style="padding: 15px 0 6px 0; font-size: 14px; font-weight: 600;">${tourNameToDisplay}</td>
+                <td style="text-align: center; padding: 15px 0 6px 0; font-size: 14px;">${d.pax}</td>
+                <td style="text-align: right; padding: 15px 0 6px 0; font-size: 14px;">DKK ${formatCurrency(avgPaxPriceFull)}</td>
+                <td style="text-align: right; padding: 15px 0 6px 0; font-size: 14px;">DKK ${formatCurrency(fullPrice)}</td>
             </tr>
             <tr>
-                <td colspan="4" style="padding: 8px 0 4px 0; font-size: 12px; color: #555;">
+                <td colspan="4" style="padding: 4px 0 10px 0; font-size: 12px; color: #555; border-bottom: 1px solid #eee;">
                     📅 <strong>Date:</strong> ${tourDate} &nbsp;&nbsp; ⏰ <strong>Start Time:</strong> ${d.startTime} &nbsp;&nbsp; 🌐 <strong>Language:</strong> ${d.language}
                 </td>
-            </tr>
-        `;
+            </tr>`;
         
+        if (discountAmt > 0) {
+            tableHTML += `
+            <tr>
+                <td style="padding: 10px 0 4px 0; font-size: 13px; color: #cc4400;" colspan="3"><i>Special Offer: ${discountPct}% Discount (${result.discountLabel || 'First Booking Offer'})</i></td>
+                <td style="text-align: right; padding: 10px 0 4px 0; font-size: 13px; color: #cc4400;">- DKK ${formatCurrency(discountAmt)}</td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0 4px 0; font-size: 13px; font-weight: 600; border-top: 1px solid #ddd;" colspan="3">Net Price After Discount</td>
+                <td style="text-align: right; padding: 4px 0 4px 0; font-size: 13px; font-weight: 600; border-top: 1px solid #ddd;">DKK ${formatCurrency(netPrice)}</td>
+            </tr>`;
+        }
+        
+        tableHTML += `
+            <tr style="background: #fff8f0;">
+                <td style="padding: 12px 6px; font-size: 14px; font-weight: 700; color: #cc5500;" colspan="3">🏦 50% Deposit — This Invoice (due within 14 days)</td>
+                <td style="text-align: right; padding: 12px 6px; font-size: 14px; font-weight: 700; color: #cc5500;">DKK ${formatCurrency(depositAmount)}</td>
+            </tr>
+            <tr>
+                <td style="padding: 6px 0; font-size: 12px; color: #888;" colspan="3">Remaining 50% — due on day of tour</td>
+                <td style="text-align: right; padding: 6px 0; font-size: 12px; color: #888;">DKK ${formatCurrency(remainingAmount)}</td>
+            </tr>`;
+        
+        document.getElementById('pdf-table-body').innerHTML = tableHTML;
         document.getElementById('pdf-notes-display').textContent = notes;
         
-        const subTotal = result.totalPrice;
-        const tax = Math.round(subTotal * 0.25);
-        const total = subTotal + tax;
+        // Totals are based on the DEPOSIT (50%)
+        const depositTax = Math.round(depositAmount * 0.25);
+        const depositTotal = depositAmount + depositTax;
         
-        document.getElementById('pdf-subtotal').textContent = "DKK " + formatCurrency(subTotal);
-        document.getElementById('pdf-tax').textContent = "DKK " + formatCurrency(tax);
-        document.getElementById('pdf-total').textContent = "DKK " + formatCurrency(total);
+        document.getElementById('pdf-subtotal').textContent = "DKK " + formatCurrency(depositAmount);
+        document.getElementById('pdf-tax').textContent = "DKK " + formatCurrency(depositTax);
+        document.getElementById('pdf-total').textContent = "DKK " + formatCurrency(depositTotal);
         
         const invoiceElement = document.getElementById('invoice-pdf-template');
         invoiceElement.style.display = 'block';
@@ -688,8 +719,30 @@ btnModalConfirm.addEventListener('click', async () => {
 
         if (functionError) throw functionError;
 
+        // Save invoice record to DB
+        await supabase.from('invoices').insert({
+            invoice_no: invNo,
+            agent_name: sessionUser.name,
+            agent_email: sessionUser.email,
+            client_name: legalName,
+            client_cvr: cvr,
+            client_address: address,
+            tour_name: d.tour,
+            tour_date: d.date,
+            tour_time: d.startTime,
+            pax: d.pax,
+            full_amount: fullPrice,
+            discount_pct: discountPct,
+            discount_amount: discountAmt,
+            net_amount: netPrice,
+            deposit_amount: depositAmount,
+            remaining_amount: remainingAmount,
+            notes: notes,
+            status: 'deposit_sent'
+        });
+
         saveStatus.style.color = 'var(--primary)';
-        saveStatus.textContent = "Invoice sent successfully.";
+        saveStatus.textContent = "✅ Invoice sent — 50% deposit requested.";
     } catch (err) {
         console.error(err);
         saveStatus.style.color = 'var(--danger)';

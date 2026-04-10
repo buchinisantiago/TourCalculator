@@ -786,3 +786,134 @@ async function generateAndSendManualInvoice(sendEmail) {
 
 document.getElementById('btn-preview-manual-invoice')?.addEventListener('click', () => generateAndSendManualInvoice(false));
 document.getElementById('btn-send-manual-invoice')?.addEventListener('click', () => generateAndSendManualInvoice(true));
+
+// ---- INVOICE HISTORY ----
+async function loadInvoiceHistory() {
+    const tbody = document.getElementById('invoices-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="8" style="padding:1rem; color:var(--text-muted); text-align:center;"><i class="ph ph-spinner ph-spin"></i> Cargando...</td></tr>`;
+    const { data, error } = await supabase.from('invoices').select('*').order('created_at', { ascending: false }).limit(50);
+    if (error || !data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="padding:1.5rem; color:var(--text-muted); text-align:center;">No hay invoices registrados todavia.</td></tr>`;
+        return;
+    }
+    const statusColors = {
+        'deposit_sent': { bg: 'rgba(255,193,7,0.15)', color: '#ffc107', label: 'Deposito Enviado' },
+        'final_sent':   { bg: 'rgba(16,185,129,0.15)', color: '#10b981', label: 'Final Enviado' },
+        'credit_note':  { bg: 'rgba(239,68,68,0.15)', color: '#ef4444', label: 'Nota de Credito' },
+        'completed':    { bg: 'rgba(16,185,129,0.2)', color: '#10b981', label: 'Completado' },
+    };
+    tbody.innerHTML = data.map(inv => {
+        const st = statusColors[inv.status] || { bg: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', label: inv.status };
+        const date = new Date(inv.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' });
+        const canFinal = inv.status === 'deposit_sent';
+        const canCredit = inv.status !== 'credit_note';
+        return `<tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding:0.6rem 0.5rem; font-family:monospace; font-size:0.8rem;">${inv.invoice_no}</td>
+            <td style="padding:0.6rem 0.5rem;">${date}</td>
+            <td style="padding:0.6rem 0.5rem;">${inv.client_name || '-'}</td>
+            <td style="padding:0.6rem 0.5rem;">${inv.tour_name || '-'}</td>
+            <td style="padding:0.6rem 0.5rem; text-align:right;">DKK ${(inv.deposit_amount||0).toLocaleString()}</td>
+            <td style="padding:0.6rem 0.5rem; text-align:right;">DKK ${(inv.remaining_amount||0).toLocaleString()}</td>
+            <td style="padding:0.6rem 0.5rem; text-align:center;"><span style="background:${st.bg}; color:${st.color}; padding:2px 8px; border-radius:12px; font-size:0.75rem; white-space:nowrap;">${st.label}</span></td>
+            <td style="padding:0.6rem 0.5rem; text-align:center;">
+                <div style="display:flex; gap:0.4rem; justify-content:center;">
+                ${canFinal ? `<button class="btn-final-inv" data-id="${inv.id}" style="background:rgba(255,107,0,0.2); color:#FF6B00; border:1px solid #FF6B00; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer;"><i class="ph ph-receipt"></i> Final</button>` : ''}
+                ${canCredit ? `<button class="btn-credit-note" data-id="${inv.id}" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid #ef4444; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer;"><i class="ph ph-x-circle"></i> Credito</button>` : ''}
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+    tbody.querySelectorAll('.btn-final-inv').forEach(btn => btn.addEventListener('click', () => generateFinalInvoice(Number(btn.dataset.id), data)));
+    tbody.querySelectorAll('.btn-credit-note').forEach(btn => btn.addEventListener('click', () => generateCreditNote(Number(btn.dataset.id), data)));
+}
+
+async function generateFinalInvoice(invId, data) {
+    const inv = data.find(i => i.id === invId);
+    if (!inv) return;
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = pdf.internal.pageSize.getWidth();
+    const finalInvNo = inv.invoice_no + '-FINAL';
+    const now = new Date();
+    const issuedDate = now.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const due = new Date(); due.setDate(now.getDate() + 14);
+    const dueDate = due.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    pdf.setFontSize(28); pdf.setFont('helvetica','bold'); pdf.text('Invoice (Final)', W-20, 25, {align:'right'});
+    pdf.setFontSize(11); pdf.setFont('helvetica','normal');
+    pdf.text('Invoice No. ' + finalInvNo, W-20, 32, {align:'right'});
+    pdf.text('Date: ' + issuedDate, W-20, 38, {align:'right'});
+    pdf.text('Ref. Deposit: ' + inv.invoice_no, W-20, 44, {align:'right'});
+    pdf.setFontSize(22); pdf.setFont('helvetica','bold'); pdf.text('Free Tour CPH', 20, 25);
+    pdf.setFontSize(12); pdf.setFont('helvetica','bold'); pdf.text('Billed to:', W-80, 55);
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(11);
+    pdf.text(inv.client_name || '', W-80, 62);
+    if (inv.client_cvr) pdf.text('CVR: ' + inv.client_cvr, W-80, 68);
+    let y = 100;
+    pdf.setLineWidth(0.5); pdf.line(20, y, W-20, y);
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(11);
+    pdf.text('Description', 20, y+8); pdf.text('Amount', W-20, y+8, {align:'right'});
+    pdf.line(20, y+12, W-20, y+12); y += 20;
+    pdf.setFont('helvetica','normal');
+    pdf.text(inv.tour_name + ' - Remaining 50%', 20, y);
+    pdf.text('DKK ' + (inv.remaining_amount||0), W-20, y, {align:'right'});
+    y += 8; pdf.setFontSize(10); pdf.setTextColor(100);
+    pdf.text('Tour: ' + (inv.tour_date||'') + '  ' + (inv.tour_time||''), 20, y);
+    pdf.setTextColor(0); pdf.setFontSize(11);
+    y += 20; pdf.line(20, y, W-20, y); y += 10;
+    pdf.text('Due Date: ' + dueDate, 20, y);
+    const remTax = Math.round((inv.remaining_amount||0) * 0.25);
+    const remTotal = (inv.remaining_amount||0) + remTax;
+    pdf.text('Sub-Total', W-60, y); pdf.text('DKK ' + (inv.remaining_amount||0), W-20, y, {align:'right'});
+    pdf.text('Tax (25%)', W-60, y+8); pdf.text('DKK ' + remTax, W-20, y+8, {align:'right'});
+    pdf.setFont('helvetica','bold');
+    pdf.text('Total Due', W-60, y+16); pdf.text('DKK ' + remTotal, W-20, y+16, {align:'right'});
+    pdf.save(finalInvNo + '.pdf');
+    await supabase.from('invoices').update({ status: 'final_sent' }).eq('id', invId);
+    await loadInvoiceHistory();
+}
+
+async function generateCreditNote(invId, data) {
+    const inv = data.find(i => i.id === invId);
+    if (!inv) return;
+    if (!confirm('Confirmar Nota de Credito para ' + inv.invoice_no + '? Esto anula el invoice.')) return;
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = pdf.internal.pageSize.getWidth();
+    const cnNo = inv.invoice_no + '-CN';
+    const now = new Date();
+    pdf.setFillColor(239, 68, 68); pdf.rect(0, 0, W, 18, 'F');
+    pdf.setFontSize(11); pdf.setFont('helvetica','bold'); pdf.setTextColor(255,255,255);
+    pdf.text('CREDIT NOTE - This document cancels the referenced invoice', W/2, 12, {align:'center'});
+    pdf.setTextColor(0);
+    pdf.setFontSize(26); pdf.setFont('helvetica','bold'); pdf.text('Credit Note', W-20, 35, {align:'right'});
+    pdf.setFontSize(11); pdf.setFont('helvetica','normal');
+    pdf.text('Credit Note No. ' + cnNo, W-20, 42, {align:'right'});
+    pdf.text('Date: ' + now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}), W-20, 48, {align:'right'});
+    pdf.text('Cancels Invoice: ' + inv.invoice_no, W-20, 54, {align:'right'});
+    pdf.setFontSize(22); pdf.setFont('helvetica','bold'); pdf.text('Free Tour CPH', 20, 35);
+    pdf.setFontSize(12); pdf.setFont('helvetica','bold'); pdf.text('Issued to:', W-80, 68);
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(11);
+    pdf.text(inv.client_name || '', W-80, 75);
+    let y = 100;
+    pdf.line(20, y, W-20, y);
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(11);
+    pdf.text('Description', 20, y+8); pdf.text('Amount', W-20, y+8, {align:'right'});
+    pdf.line(20, y+12, W-20, y+12); y += 20;
+    pdf.setFont('helvetica','normal');
+    const refundAmt = inv.deposit_amount || 0;
+    const refundTax = Math.round(refundAmt * 0.25);
+    pdf.text(inv.tour_name + ' - Deposit Refund', 20, y);
+    pdf.text('- DKK ' + refundAmt, W-20, y, {align:'right'});
+    y += 20; pdf.line(20, y, W-20, y); y += 10;
+    pdf.text('Sub-Total Credit', W-60, y); pdf.text('- DKK ' + refundAmt, W-20, y, {align:'right'});
+    pdf.text('VAT (25%)', W-60, y+8); pdf.text('- DKK ' + refundTax, W-20, y+8, {align:'right'});
+    pdf.setFont('helvetica','bold');
+    pdf.text('Total Credit', W-60, y+16); pdf.text('- DKK ' + (refundAmt+refundTax), W-20, y+16, {align:'right'});
+    pdf.save(cnNo + '.pdf');
+    await supabase.from('invoices').update({ status: 'credit_note' }).eq('id', invId);
+    await loadInvoiceHistory();
+}
+
+document.getElementById('btn-refresh-invoices')?.addEventListener('click', loadInvoiceHistory);
+setTimeout(loadInvoiceHistory, 2000); // Load after auth check completes
