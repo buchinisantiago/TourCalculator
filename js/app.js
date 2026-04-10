@@ -399,8 +399,8 @@ function updateUI() {
         result.breakdown.venues.forEach(v => {
             breakdownLines.innerHTML += `
                 <div class="ticket-line">
-                    <span class="bold">↳ ${v.venue} <small>(${result.summary.pax}×${v.pricePerPax})</small></span>
-                    <span>DKK ${formatCurrency(v.subtotal)}</span>
+                    <span class="bold">↳ ${v.venue} <small class="${!isAdminMode ? 'hidden' : ''}">(${result.summary.pax}×${v.pricePerPax})</small></span>
+                    <span class="${!isAdminMode ? 'hidden' : ''}">DKK ${formatCurrency(v.subtotal)}</span>
                 </div>`;
         });
     }
