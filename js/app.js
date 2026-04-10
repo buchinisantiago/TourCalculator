@@ -14,7 +14,6 @@ const ticketView = document.getElementById('ticket-view');
 const breakdownLines = document.getElementById('breakdown-lines');
 const btnCopy = document.getElementById('btn-copy');
 const btnEmail = document.getElementById('btn-email');
-const btnSave = document.getElementById('btn-save');
 const saveStatus = document.getElementById('save-status');
 
 // New Welcome UI
@@ -271,8 +270,6 @@ function setAppLanguage(lang) {
 }
 
 // Form Elements needed for conditionals
-const tourRadios = document.getElementsByName('tour');
-const btnSaveTxt = btnSave.innerHTML;
 
 function getFormData() {
     return {
@@ -340,6 +337,7 @@ function updateUI() {
         return;
     }
 
+    // Success calculation
     errorBox.classList.add('hidden');
     ticketView.classList.remove('hidden');
     document.getElementById('save-bar').classList.remove('hidden');
