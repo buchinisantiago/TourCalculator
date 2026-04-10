@@ -557,13 +557,14 @@ btnModalConfirm.addEventListener('click', async () => {
     invoiceModal.classList.add('hidden');
     
     // Gather modal data
-    const invoiceData = {
-        legalName: document.getElementById('inv-legalname').value,
-        cvr: document.getElementById('inv-cvr').value,
-        address: document.getElementById('inv-address').value
-    };
+    const legalName = document.getElementById('inv-legalname').value || 'Unknown Client';
+    const cvr = document.getElementById('inv-cvr').value;
+    const address = document.getElementById('inv-address').value;
+    const notes = document.getElementById('inv-notes').value;
 
     const { data: qData, result } = currentQuote;
+    const d = result.summary;
+    const t = TRANSLATIONS[currentLang];
     
     btnEmail.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Generating...';
     btnEmail.disabled = true;
@@ -571,35 +572,71 @@ btnModalConfirm.addEventListener('click', async () => {
     saveStatus.textContent = "Creating Invoice PDF...";
     
     try {
-        const saveBar = document.getElementById('save-bar');
-        saveBar.style.visibility = 'hidden';
+        // --- POPULATE INVOICE TEMPLATE ---
+        document.getElementById('pdf-inv-no').textContent = "CPH-" + Date.now().toString().slice(-4) + Math.floor(Math.random()*10);
+        
+        const now = new Date();
+        document.getElementById('pdf-inv-date').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        
+        const due = new Date();
+        due.setDate(now.getDate() + 14);
+        document.getElementById('pdf-due-date').textContent = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        
+        document.getElementById('pdf-billed-name').textContent = legalName;
+        document.getElementById('pdf-billed-cvr').textContent = cvr ? "CVR: " + cvr : "";
+        document.getElementById('pdf-billed-address').textContent = address;
+        
+        const tourNameToDisplay = d.tour === 'OTHER' ? t.other : d.tour;
+        const avgPaxPrice = Math.round(result.totalPrice / d.pax);
+        
+        document.getElementById('pdf-table-body').innerHTML = `
+            <tr>
+                <td style="padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">${tourNameToDisplay}</td>
+                <td style="text-align: center; padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">${d.pax}</td>
+                <td style="text-align: right; padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">DKK ${formatCurrency(avgPaxPrice)}</td>
+                <td style="text-align: right; padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">DKK ${formatCurrency(result.totalPrice)}</td>
+            </tr>
+        `;
+        
+        document.getElementById('pdf-notes-display').textContent = notes;
+        
+        const subTotal = result.totalPrice;
+        const tax = Math.round(subTotal * 0.25);
+        const total = subTotal + tax;
+        
+        document.getElementById('pdf-subtotal').textContent = "DKK " + formatCurrency(subTotal);
+        document.getElementById('pdf-tax').textContent = "DKK " + formatCurrency(tax);
+        document.getElementById('pdf-total').textContent = "DKK " + formatCurrency(total);
+        
+        const invoiceElement = document.getElementById('invoice-pdf-template');
+        invoiceElement.style.display = 'block';
         
         // Wait rendering frame
         await new Promise(r => setTimeout(r, 100));
 
-        const canvas = await html2canvas(ticketView, {
-            backgroundColor: '#0A0A0A',
+        const canvas = await html2canvas(invoiceElement, {
+            backgroundColor: '#ffffff',
             scale: 2
         });
+        
+        invoiceElement.style.display = 'none';
+
         const imgData = canvas.toDataURL('image/png');
         
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({
             orientation: 'portrait',
-            unit: 'px',
-            format: [canvas.width / 2, canvas.height / 2]
+            unit: 'mm',
+            format: 'a4'
         });
         
-        const imgProps = pdf.getImageProperties(imgData);
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
         
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
         
         // Get PDF as base64 without the 'data:application/pdf;base64,' prefix
         const pdfBase64 = pdf.output('datauristring').split(',')[1];
-        
-        saveBar.style.visibility = 'visible';
 
         // Call Supabase Edge Function to notify the office
         const customEmails = pricingConfig?.invoice_emails || "info@freetourcph.com,buchinisantiago@gmail.com";
@@ -612,7 +649,7 @@ btnModalConfirm.addEventListener('click', async () => {
                 tourName: result.summary.tour,
                 pdfBase64: pdfBase64,
                 recipients: emailRecipients, 
-                invoiceDetails: invoiceData
+                invoiceDetails: { legalName, cvr, address, notes }
             }
         });
 
