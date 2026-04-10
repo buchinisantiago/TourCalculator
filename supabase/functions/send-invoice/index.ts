@@ -85,7 +85,7 @@ serve(async (req) => {
     `;
 
     const emailPayload: Record<string, unknown> = {
-      from: "B2B Tour Copenhagen <info@freetourcph.com>",
+      from: "B2B Tour Copenhagen <onboarding@resend.dev>",
       to: toList,
       subject: `[Invoice Request] ${tourName} — ${agentName}`,
       html: emailHtml,

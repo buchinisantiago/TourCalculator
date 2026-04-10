@@ -647,7 +647,7 @@ btnModalConfirm.addEventListener('click', async () => {
         const customEmails = pricingConfig?.invoice_emails || "info@freetourcph.com,buchinisantiago@gmail.com";
         const emailRecipients = customEmails.split(',').map(e => e.trim()).filter(Boolean);
 
-        const { data: functionData, error: functionError } = await supabase.functions.invoke('send-invoice', {
+        const { data: functionData, error: functionError } = await supabase.functions.invoke('super-worker', {
             body: {
                 agentEmail: sessionUser.email,
                 agentName: sessionUser.name,
