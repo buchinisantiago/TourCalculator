@@ -868,8 +868,56 @@ async function generateFinalInvoice(invId, data) {
     pdf.text('Tax (25%)', W-60, y+8); pdf.text('DKK ' + remTax, W-20, y+8, {align:'right'});
     pdf.setFont('helvetica','bold');
     pdf.text('Total Due', W-60, y+16); pdf.text('DKK ' + remTotal, W-20, y+16, {align:'right'});
+    
+    // Download locally
     pdf.save(finalInvNo + '.pdf');
+    
+    // Get PDF as base64
+    const pdfBase64 = pdf.output('datauristring').split(',')[1];
+    
+    // Setup emails
+    const customEmails = currentConfig?.invoice_emails || "info@freetourcph.com,buchinisantiago@gmail.com";
+    const toEmails = customEmails.split(',').map(e => e.trim()).filter(Boolean);
+    
+    // Trigger Edge function
+    const { error: fnErr } = await supabase.functions.invoke('super-worker', {
+        body: {
+            agentEmail: inv.agent_email,
+            agentName: inv.agent_name,
+            tourName: inv.tour_name + ' (FINAL)',
+            pdfBase64: pdfBase64,
+            recipients: toEmails,
+            invoiceDetails: { legalName: inv.client_name, cvr: inv.client_cvr, address: inv.client_address, notes: 'Remaining 50% Final Payment' }
+        }
+    });
+
+    if (fnErr) alert('Hubo un error enviando el email: ' + fnErr.message);
+    else alert('¡Invoice Final generado y enviado por email!');
+
+    // Update old invoice status
     await supabase.from('invoices').update({ status: 'final_sent' }).eq('id', invId);
+    
+    // Insert new invoice row
+    await supabase.from('invoices').insert({
+        invoice_no: finalInvNo,
+        agent_name: inv.agent_name,
+        agent_email: inv.agent_email,
+        client_name: inv.client_name,
+        client_cvr: inv.client_cvr,
+        client_address: inv.client_address,
+        tour_name: inv.tour_name + ' (Final Payment)',
+        tour_date: inv.tour_date,
+        tour_time: inv.tour_time,
+        pax: inv.pax,
+        full_amount: inv.remaining_amount,
+        discount_pct: 0,
+        discount_amount: 0,
+        net_amount: inv.remaining_amount,
+        deposit_amount: inv.remaining_amount,
+        remaining_amount: 0,
+        status: 'completed'
+    });
+
     await loadInvoiceHistory();
 }
 
@@ -910,8 +958,56 @@ async function generateCreditNote(invId, data) {
     pdf.text('VAT (25%)', W-60, y+8); pdf.text('- DKK ' + refundTax, W-20, y+8, {align:'right'});
     pdf.setFont('helvetica','bold');
     pdf.text('Total Credit', W-60, y+16); pdf.text('- DKK ' + (refundAmt+refundTax), W-20, y+16, {align:'right'});
+    
+    // Download locally
     pdf.save(cnNo + '.pdf');
+    
+    // Get PDF as base64
+    const pdfBase64 = pdf.output('datauristring').split(',')[1];
+    
+    // Setup emails
+    const customEmails = currentConfig?.invoice_emails || "info@freetourcph.com,buchinisantiago@gmail.com";
+    const toEmails = customEmails.split(',').map(e => e.trim()).filter(Boolean);
+    
+    // Trigger Edge function
+    const { error: fnErr } = await supabase.functions.invoke('super-worker', {
+        body: {
+            agentEmail: inv.agent_email,
+            agentName: inv.agent_name,
+            tourName: inv.tour_name + ' (CREDIT NOTE)',
+            pdfBase64: pdfBase64,
+            recipients: toEmails,
+            invoiceDetails: { legalName: inv.client_name, cvr: inv.client_cvr, address: inv.client_address, notes: 'This cancels invoice ' + inv.invoice_no }
+        }
+    });
+
+    if (fnErr) alert('Hubo un error enviando la nota de crédito: ' + fnErr.message);
+    else alert('¡Nota de Crédito generada y enviada por email!');
+
+    // Update old invoice status
     await supabase.from('invoices').update({ status: 'credit_note' }).eq('id', invId);
+    
+    // Insert new credit note row
+    await supabase.from('invoices').insert({
+        invoice_no: cnNo,
+        agent_name: inv.agent_name,
+        agent_email: inv.agent_email,
+        client_name: inv.client_name,
+        client_cvr: inv.client_cvr,
+        client_address: inv.client_address,
+        tour_name: inv.tour_name + ' (Credit Note)',
+        tour_date: inv.tour_date,
+        tour_time: inv.tour_time,
+        pax: inv.pax,
+        full_amount: -refundAmt,
+        discount_pct: 0,
+        discount_amount: 0,
+        net_amount: -refundAmt,
+        deposit_amount: -refundAmt,
+        remaining_amount: 0,
+        status: 'credit_note'
+    });
+
     await loadInvoiceHistory();
 }
 
