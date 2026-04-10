@@ -218,8 +218,7 @@
                 </div>
                 <div id="save-bar" class="hidden" style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
                     <button id="btn-copy" class="btn btn-secondary i18n" data-key="copy_btn" style="flex: 1;"><i class="ph ph-copy"></i> Copy Text</button>
-                    <button id="btn-email" class="btn btn-secondary i18n" data-key="email_btn" style="flex: 1; border-color: var(--primary); color: var(--primary);"><i class="ph ph-envelope"></i> Email Invoice</button>
-                    <button id="btn-save" class="btn btn-primary i18n" data-key="save_btn" style="flex: 1.2;"><i class="ph ph-floppy-disk"></i> Save & Record</button>
+                    <button id="btn-email" class="btn btn-primary i18n" data-key="email_btn" style="flex: 1.5;"><i class="ph ph-envelope"></i> Email Invoice</button>
                 </div>
             </div>
             <div id="save-status" style="text-align: center; font-size: 0.85rem; color: var(--text-muted);"></div>
@@ -238,6 +237,30 @@
             <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
                 <button id="btn-security-cancel" class="btn btn-secondary i18n" data-key="cancel">Cancelar</button>
                 <button id="btn-security-confirm" class="btn btn-primary i18n" data-key="confirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Details Modal -->
+    <div id="invoice-modal" class="modal-overlay hidden">
+        <div class="glass-panel modal-content animate-scale-in">
+            <h2 style="margin-bottom: 1rem;"><i class="ph ph-file-text"></i> Invoice Details</h2>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">Enter client details to finalize the quote.</p>
+            <div class="input-group" style="margin-bottom: 1rem;">
+                <label>Company Legal Name</label>
+                <input type="text" id="inv-legalname" style="width: 100%; padding: 0.75rem 1rem;" placeholder="e.g. Travel Agency Ltd">
+            </div>
+            <div class="input-group" style="margin-bottom: 1rem;">
+                <label>CVR / VAT Number</label>
+                <input type="text" id="inv-cvr" style="width: 100%; padding: 0.75rem 1rem;" placeholder="optional">
+            </div>
+            <div class="input-group" style="margin-bottom: 1rem;">
+                <label>Address / City</label>
+                <input type="text" id="inv-address" style="width: 100%; padding: 0.75rem 1rem;" placeholder="optional">
+            </div>
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                <button id="btn-invoice-cancel" class="btn btn-secondary i18n" data-key="cancel">Cancelar</button>
+                <button id="btn-invoice-confirm" class="btn btn-primary"><i class="ph ph-paper-plane-right"></i> Send Invoice</button>
             </div>
         </div>
     </div>

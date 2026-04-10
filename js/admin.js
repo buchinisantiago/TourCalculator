@@ -20,6 +20,7 @@ const matrixHeader = document.getElementById('matrix-header');
 const matrixBody = document.getElementById('matrix-body');
 const markupCorporate = document.getElementById('markupCorporate');
 const markupPersonal = document.getElementById('markupPersonal');
+const invoiceEmails = document.getElementById('invoiceEmails');
 const btnSavePrices = document.getElementById('btn-save-prices');
 const saveMsg = document.getElementById('save-msg');
 
@@ -127,6 +128,7 @@ async function loadPrices() {
         // Extract markup and populate fields
         if (data.markup_corporate !== undefined) markupCorporate.value = data.markup_corporate;
         if (data.markup_personal !== undefined) markupPersonal.value = data.markup_personal;
+        if (data.invoice_emails !== undefined) invoiceEmails.value = data.invoice_emails;
         
         // Store globally for memory
         currentConfig = data;
@@ -553,6 +555,7 @@ btnSavePrices.addEventListener('click', async () => {
         // Add markup, venue_prices and custom_tours as explicit named columns
         priceUpdate.markup_corporate = Number(markupCorporate.value);
         priceUpdate.markup_personal = Number(markupPersonal.value);
+        priceUpdate.invoice_emails = invoiceEmails.value.trim();
         priceUpdate.venue_prices = currentConfig.venue_prices || {};
         priceUpdate.custom_tours = currentConfig.custom_tours || {};
         

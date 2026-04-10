@@ -68,7 +68,12 @@ const TRANSLATIONS = {
         bus_label: "Bus",
         extra_note: "Incluye 30 min extra por llegada anticipada y coordinación con el chofer.",
         net_total: "Total Neto",
-        markup: "Margen",
+        total_pax: "por persona",
+        approx: "Aprox.",
+        copy_btn: "Copiar Texto",
+        email_btn: "Enviar x Email",
+        save_btn: "Guardar y Registrar",
+        other: "OTRO",
         yes: "Sí",
         no: "No",
         luggage_note: "🧳 <strong>Capacidad Reducida:</strong> Para tours de desembarque con maletas, se calcula un uso máximo del 70% de los asientos del bus.",
@@ -113,7 +118,12 @@ const TRANSLATIONS = {
         approx: "Approx.",
         copy_btn: "Copy Text",
         email_btn: "Email Invoice",
+        total_pax: "per person",
+        approx: "Approx.",
+        copy_btn: "Copy Text",
+        email_btn: "Email Invoice",
         save_btn: "Save & Record",
+        other: "OTHER",
         yes: "Yes",
         no: "No",
         luggage_note: "🧳 <strong>Reduced Capacity:</strong> For disembarking tours with luggage, a max of 70% of bus seats are used.",
@@ -330,13 +340,11 @@ function updateUI() {
         return;
     }
 
-    // Success calculation
     errorBox.classList.add('hidden');
     ticketView.classList.remove('hidden');
     document.getElementById('save-bar').classList.remove('hidden');
     saveStatus.textContent = '';
     btnCopy.disabled = false;
-    btnSave.disabled = false;
     btnEmail.disabled = false;
     currentQuote = { data, result };
 
@@ -531,31 +539,57 @@ function updateTourInfoBox(tourName) {
     `;
 }
 
-// Send Email logic (via Supabase Edge Function)
-btnEmail.addEventListener('click', async () => {
-    if (!currentQuote || !window.jspdf) return;
+  // Email / Modal Logic
+const btnModalCancel = document.getElementById('btn-invoice-cancel');
+const btnModalConfirm = document.getElementById('btn-invoice-confirm');
+const invoiceModal = document.getElementById('invoice-modal');
 
-    btnEmail.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Sending...';
+btnEmail.addEventListener('click', () => {
+    if (!currentQuote) return;
+    invoiceModal.classList.remove('hidden');
+});
+
+btnModalCancel.addEventListener('click', () => {
+    invoiceModal.classList.add('hidden');
+});
+
+btnModalConfirm.addEventListener('click', async () => {
+    invoiceModal.classList.add('hidden');
+    
+    // Gather modal data
+    const invoiceData = {
+        legalName: document.getElementById('inv-legalname').value,
+        cvr: document.getElementById('inv-cvr').value,
+        address: document.getElementById('inv-address').value
+    };
+
+    const { data: qData, result } = currentQuote;
+    
+    btnEmail.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Generating...';
     btnEmail.disabled = true;
-
+    saveStatus.style.color = 'var(--text-main)';
+    saveStatus.textContent = "Creating Invoice PDF...";
+    
     try {
-        const { data, result } = currentQuote;
-        
-        // 1. Generate PDF (we use the Ticket div)
-        const ticketElement = document.getElementById('ticket-view');
         const saveBar = document.getElementById('save-bar');
-        
-        // Temporarily hide buttons for clean PDF
         saveBar.style.visibility = 'hidden';
+        
+        // Wait rendering frame
+        await new Promise(r => setTimeout(r, 100));
 
-        const canvas = await html2canvas(ticketElement, { 
-            scale: 2,
-            backgroundColor: '#0a0a0a' // match theme
+        const canvas = await html2canvas(ticketView, {
+            backgroundColor: '#0A0A0A',
+            scale: 2
         });
         const imgData = canvas.toDataURL('image/png');
         
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'px',
+            format: [canvas.width / 2, canvas.height / 2]
+        });
+        
         const imgProps = pdf.getImageProperties(imgData);
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
@@ -567,20 +601,25 @@ btnEmail.addEventListener('click', async () => {
         
         saveBar.style.visibility = 'visible';
 
-        // 2. Call Supabase Edge Function to notify the office (info@freetourcph.com)
+        // Call Supabase Edge Function to notify the office
+        const customEmails = pricingConfig?.invoice_emails || "info@freetourcph.com,buchinisantiago@gmail.com";
+        const emailRecipients = customEmails.split(',').map(e => e.trim()).filter(Boolean);
+
         const { data: functionData, error: functionError } = await supabase.functions.invoke('send-invoice', {
             body: {
                 agentEmail: sessionUser.email,
                 agentName: sessionUser.name,
                 tourName: result.summary.tour,
-                pdfBase64: pdfBase64
+                pdfBase64: pdfBase64,
+                recipients: emailRecipients, 
+                invoiceDetails: invoiceData
             }
         });
 
         if (functionError) throw functionError;
 
         saveStatus.style.color = 'var(--primary)';
-        saveStatus.textContent = "Request sent to Office for verification.";
+        saveStatus.textContent = "Invoice sent successfully.";
     } catch (err) {
         console.error(err);
         saveStatus.style.color = 'var(--danger)';
@@ -591,61 +630,7 @@ btnEmail.addEventListener('click', async () => {
     }
 });
 
-// Save logic to Supabase
-btnSave.addEventListener('click', async () => {
-    if (!currentQuote) return;
-    
-    // Si no han configurado el Supabase Key, dar aviso de demo.
-    if (SUPABASE_URL.includes('YOUR_PROJECT_ID')) {
-        saveStatus.style.color = 'var(--danger)';
-        saveStatus.textContent = '❌ Por favor configura tus keys de Supabase en app.js';
-        return;
-    }
 
-    try {
-        btnSave.disabled = true;
-        btnSave.innerHTML = `<i class="ph ph-spinner ph-spin"></i> Guardando...`;
-        saveStatus.textContent = '';
-
-        const { data, result } = currentQuote;
-        const d = result.summary;
-        const b = result.breakdown;
-
-        const record = {
-            agent_email: data.email,
-            agent_name: data.name,
-            is_disembarking: d.isDisembarking === 'Yes',
-            pax: d.pax,
-            language: d.language,
-            tour_date: d.date,
-            start_time: d.startTime,
-            tour_name: d.tour,
-            hours: d.hours,
-            guide_price: b.guidePrice,
-            bus_price: b.busPrice,
-            bus_type: b.busType,
-            venues_total: b.venueTotal,
-            total_price: result.totalPrice,
-            manual_quote: false
-        };
-
-        const { error } = await supabase.from('quotes').insert([record]);
-
-        if (error) throw error;
-
-        saveStatus.style.color = 'var(--success)';
-        saveStatus.innerHTML = '<i class="ph ph-check-circle"></i> Cotización guardada en BD.';
-        setTimeout(() => saveStatus.textContent = '', 4000);
-
-    } catch (e) {
-        console.error(e);
-        saveStatus.style.color = 'var(--danger)';
-        saveStatus.textContent = '❌ Error al guardar: ' + e.message;
-    } finally {
-        btnSave.disabled = false;
-        btnSave.innerHTML = btnSaveTxt;
-    }
-});
 
 // ---- INIT & WELCOME FLOW ----
 const btnVisibility = document.getElementById('btn-visibility');
