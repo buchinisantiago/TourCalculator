@@ -69,19 +69,19 @@ const TRANSLATIONS = {
         extra_note: "Incluye 30 min extra por llegada anticipada y coordinación con el chofer.",
         net_total: "Total Neto",
         markup: "Margen",
-        total_pax: "por persona",
-        approx: "Aprox.",
-        copy_btn: "Copiar Texto",
-        email_btn: "Enviar x Email",
-        save_btn: "Guardar y Registrar",
-        other: "OTRO",
         yes: "Sí",
         no: "No",
         luggage_note: "🧳 <strong>Capacidad Reducida:</strong> Para tours de desembarque con maletas, se calcula un uso máximo del 70% de los asientos del bus.",
         auth_required: "Contraseña requerida",
         auth_subtitle: "Ingresa la contraseña para ver el desglose de precios.",
         cancel: "Cancelar",
-        confirm: "Confirmar"
+        confirm: "Confirmar",
+        header_subtitle: "Generador rápido de cotizaciones para agentes",
+        info_transport: "Transporte",
+        info_duration: "Duración",
+        info_sights: "Puntos a visitar",
+        info_includes: "Incluye",
+        info_no_venues: "Sin venues incluidos"
     },
     ENG: {
         admin_panel: "Admin Panel",
@@ -114,10 +114,19 @@ const TRANSLATIONS = {
         copy_btn: "Copy Text",
         email_btn: "Email Invoice",
         save_btn: "Save & Record",
-        other: "OTHER",
         yes: "Yes",
         no: "No",
-        luggage_note: "🧳 <strong>Reduced Capacity:</strong> For disembarking tours with luggage, a max of 70% of bus seats are used."
+        luggage_note: "🧳 <strong>Reduced Capacity:</strong> For disembarking tours with luggage, a max of 70% of bus seats are used.",
+        auth_required: "Password required",
+        auth_subtitle: "Enter the password to expand the price breakdown.",
+        cancel: "Cancel",
+        confirm: "Confirm",
+        header_subtitle: "Quick quote generator for agents",
+        info_transport: "Transport",
+        info_duration: "Duration",
+        info_sights: "Sights to visit",
+        info_includes: "Includes",
+        info_no_venues: "No venues included"
     },
     ITA: {
         admin_panel: "Pannello Amministratore",
@@ -153,13 +162,67 @@ const TRANSLATIONS = {
         other: "ALTRO",
         yes: "Sì",
         no: "No",
-        luggage_note: "🧳 <strong>Capacità Ridotta:</strong> Per i tour di sbarco con bagagli, viene utilizzato al massimo el 70% dei posti sull'autobus.",
+        luggage_note: "🧳 <strong>Capacità Ridotta:</strong> Per i tour di sbarco con bagagli, viene utilizzato al massimo il 70% dei posti sull'autobus.",
         auth_required: "Password richiesta",
         auth_subtitle: "Inserisci la password per visualizzare il dettaglio dei prezzi.",
         cancel: "Annulla",
-        confirm: "Conferma"
+        confirm: "Conferma",
+        header_subtitle: "Generatore rapido di preventivi per agenti",
+        info_transport: "Trasporto",
+        info_duration: "Durata",
+        info_sights: "Punti da visitare",
+        info_includes: "Include",
+        info_no_venues: "Nessun venue incluso"
     }
 };
+
+function translateTourText(text, lang) {
+    if (!text || lang === 'ESP') return text;
+    
+    const dict = {
+        ENG: {
+            "Caminata": "Walking",
+            "Paseo a pie": "Walking",
+            "Bote por canales": "Canal Boat",
+            "Bote": "Boat",
+            "Traslado directo": "Direct Transfer",
+            "La Sirenita": "Little Mermaid",
+            "Regreso al puerto": "Return to port",
+            "Vistas panorámicas principales": "Main panoramic views",
+            "Aeropuerto": "Airport",
+            "Puerto": "Port",
+            "u Hotel": "or Hotel",
+            "Canales": "Canals",
+            "highlights ciudad": "city highlights",
+            "Vistas desde el agua": "Views from the water"
+        },
+        ITA: {
+            "Caminata": "Camminata",
+            "Paseo a pie": "Passeggiata",
+            "Bote por canales": "Barca sui canali",
+            "Bote": "Barca",
+            "Traslado directo": "Trasferimento diretto",
+            "La Sirenita": "Sirenetta",
+            "Regreso al puerto": "Ritorno al porto",
+            "Vistas panorámicas principales": "Principali viste panoramiche",
+            "Aeropuerto": "Aeroporto",
+            "Puerto": "Porto",
+            "u Hotel": "o Hotel",
+            "Canales": "Canali",
+            "highlights ciudad": "highlights della città",
+            "Vistas desde el agua": "Viste dall'acqua"
+        }
+    };
+
+    if (dict[lang]) {
+        let translated = text;
+        for (const [es, trans] of Object.entries(dict[lang])) {
+            translated = translated.replace(new RegExp(es, 'gi'), trans);
+        }
+        return translated;
+    }
+    return text;
+}
 
 function setAppLanguage(lang) {
     currentLang = lang;
@@ -439,26 +502,27 @@ function updateTourInfoBox(tourName) {
 
     infoBox.classList.remove('hidden');
     
-    const transport = info.transport || '—';
-    const sights = info.sights || '—';
-    const venues = (info.venues && info.venues.length > 0) ? info.venues.join(', ') : 'No venues included';
+    const t = TRANSLATIONS[currentLang];
+    const transport = info.transport ? translateTourText(info.transport, currentLang) : '—';
+    const sights = info.sights ? translateTourText(info.sights, currentLang) : '—';
+    const venues = (info.venues && info.venues.length > 0) ? info.venues.join(', ') : t.info_no_venues;
 
     infoBox.innerHTML = `
         <table class="tour-info-table">
             <tr>
-                <td class="label">Transporte</td>
+                <td class="label">${t.info_transport}</td>
                 <td class="value"><strong>${transport}</strong></td>
             </tr>
             <tr>
-                <td class="label">Duración</td>
-                <td class="value"><strong>${info.hours} hs</strong></strong></td>
+                <td class="label">${t.info_duration}</td>
+                <td class="value"><strong>${info.hours} hs</strong></td>
             </tr>
             <tr>
-                <td class="label">Puntos a visitar</td>
+                <td class="label">${t.info_sights}</td>
                 <td class="value">${sights}</td>
             </tr>
             <tr>
-                <td class="label">Incluye</td>
+                <td class="label">${t.info_includes}</td>
                 <td class="value" style="color: var(--success); font-weight: 500;">
                     <i class="ph ph-ticket"></i> ${venues}
                 </td>
