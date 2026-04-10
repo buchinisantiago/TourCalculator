@@ -657,7 +657,7 @@ btnModalConfirm.addEventListener('click', async () => {
                 <td style="text-align: right; padding: 12px 6px; font-size: 14px; font-weight: 700; color: #cc5500;">DKK ${formatCurrency(depositAmount)}</td>
             </tr>
             <tr>
-                <td style="padding: 6px 0; font-size: 12px; color: #888;" colspan="3">Remaining 50% — due on day of tour</td>
+                <td style="padding: 6px 0; font-size: 12px; color: #888;" colspan="3">Remaining 50% — due 1 day before tour date</td>
                 <td style="text-align: right; padding: 6px 0; font-size: 12px; color: #888;">DKK ${formatCurrency(remainingAmount)}</td>
             </tr>`;
         
