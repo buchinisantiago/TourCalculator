@@ -753,7 +753,7 @@ btnModalConfirm.addEventListener('click', async () => {
     } catch (err) {
         console.error(err);
         saveStatus.style.color = 'var(--danger)';
-        saveStatus.textContent = "Error sending email. Check console.";
+        saveStatus.textContent = "Error: " + (err.message || JSON.stringify(err));
     } finally {
         btnEmail.innerHTML = '<i class="ph ph-envelope"></i> Email Invoice';
         btnEmail.disabled = false;
