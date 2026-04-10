@@ -336,7 +336,7 @@
             </div>
         </div>
 
-        <!-- Footer -->
+        <!-- Footer - Payment data injected server-side, NOT stored in frontend -->
         <div style="position: absolute; bottom: 50px; left: 60px; right: 60px; display: flex; justify-content: space-between; font-size: 13px;">
             <div>
                 <div style="font-weight: 700; font-size: 18px; margin-bottom: 15px;">Contact</div>
@@ -346,10 +346,10 @@
             </div>
             <div>
                 <div style="font-weight: 700; font-size: 18px; margin-bottom: 15px;">Payment Info</div>
-                <div style="margin-bottom: 5px;">CVR 46389506</div>
-                <div style="margin-bottom: 5px;">Bank: N26</div>
-                <div style="margin-bottom: 5px;">IBAN: DE73 1001 1001 2627 2645 49</div>
-                <div>SWIFT/BIC: NTSBDEB1XXX</div>
+                <div id="pdf-payment-info" style="font-size: 13px; line-height: 1.7;">
+                    <!-- Injected by server when email is sent -->
+                    <div style="color: #aaa; font-style: italic; font-size: 12px;">Payment details included in the email from our office.</div>
+                </div>
             </div>
         </div>
     </div>
