@@ -587,12 +587,19 @@ btnModalConfirm.addEventListener('click', async () => {
         const tourNameToDisplay = d.tour === 'OTHER' ? t.other : d.tour;
         const avgPaxPrice = Math.round(result.totalPrice / d.pax);
         
+        const tourDate = new Date(d.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
         document.getElementById('pdf-table-body').innerHTML = `
             <tr>
-                <td style="padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">${tourNameToDisplay}</td>
+                <td style="padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px; font-weight: 600;">${tourNameToDisplay}</td>
                 <td style="text-align: center; padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">${d.pax}</td>
                 <td style="text-align: right; padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">DKK ${formatCurrency(avgPaxPrice)}</td>
                 <td style="text-align: right; padding: 15px 0; border-bottom: 1px solid #ddd; font-size: 14px;">DKK ${formatCurrency(result.totalPrice)}</td>
+            </tr>
+            <tr>
+                <td colspan="4" style="padding: 8px 0 4px 0; font-size: 12px; color: #555;">
+                    📅 <strong>Date:</strong> ${tourDate} &nbsp;&nbsp; ⏰ <strong>Start Time:</strong> ${d.startTime} &nbsp;&nbsp; 🌐 <strong>Language:</strong> ${d.language}
+                </td>
             </tr>
         `;
         
