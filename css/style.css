@@ -198,8 +198,10 @@ body {
   transition: opacity 0.3s ease;
 }
 
-.logos-grid:hover {
-  opacity: 0.9;
+.logos-grid img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .logo-placeholder {
