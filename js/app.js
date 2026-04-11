@@ -18,7 +18,7 @@ const saveStatus = document.getElementById('save-status');
 
 // New Welcome UI
 const welcomeForm = document.getElementById('welcome-form');
-const welcomeStep = document.getElementById('welcome-step');
+const welcomeStep = document.getElementById('welcome-container');
 const calculatorWrap = document.getElementById('calculator-wrap');
 const quoteSidebar = document.getElementById('quote-sidebar');
 
@@ -87,7 +87,9 @@ const TRANSLATIONS = {
         info_duration: "Duración",
         info_sights: "Puntos a visitar",
         info_includes: "Incluye",
-        info_no_venues: "Sin venues incluidos"
+        info_no_venues: "Sin venues incluidos",
+        trust_title: "¿Por qué elegirnos?",
+        trust_subtitle: "Tu socio de confianza en Copenhague"
     },
     ENG: {
         admin_panel: "Admin Panel",
@@ -137,7 +139,9 @@ const TRANSLATIONS = {
         info_duration: "Duration",
         info_sights: "Sights to visit",
         info_includes: "Includes",
-        info_no_venues: "No venues included"
+        info_no_venues: "No venues included",
+        trust_title: "Why choose us?",
+        trust_subtitle: "Your trusted partner in Copenhagen"
     },
     ITA: {
         admin_panel: "Pannello Amministratore",
@@ -183,7 +187,9 @@ const TRANSLATIONS = {
         info_duration: "Durata",
         info_sights: "Punti da visitare",
         info_includes: "Include",
-        info_no_venues: "Nessun venue incluso"
+        info_no_venues: "Nessun venue incluso",
+        trust_title: "Perché elegirci?",
+        trust_subtitle: "Il tuo partner di fiducia a Copenaghen"
     }
 };
 
