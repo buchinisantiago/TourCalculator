@@ -204,6 +204,24 @@ body {
   object-fit: contain;
 }
 
+.logo-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-icon {
+  height: 40px !important;
+}
+
+.logo-text {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
 .logo-placeholder {
   font-weight: 700;
   font-size: 1.1rem;
