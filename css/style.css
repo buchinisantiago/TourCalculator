@@ -193,9 +193,14 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 2rem;
-  opacity: 0.6;
+  opacity: 0.5;
   filter: grayscale(1);
-  transition: opacity 0.3s ease;
+  transition: all 0.4s ease;
+}
+
+.logos-grid:hover {
+  opacity: 1;
+  filter: grayscale(0);
 }
 
 .logos-grid img {
@@ -212,6 +217,16 @@ body {
 
 .logo-icon {
   height: 40px !important;
+}
+
+.mamemi-icon {
+  mix-blend-mode: screen;
+  filter: brightness(1.2);
+  transition: transform 0.3s ease;
+}
+
+.logo-item:hover .mamemi-icon {
+  transform: scale(1.1);
 }
 
 .logo-text {
