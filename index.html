@@ -41,6 +41,22 @@
 
         <!-- Welcome Step (Identify) -->
         <div id="welcome-container" class="welcome-layout animate-fade-in">
+            <!-- Animated Tour Slideshow -->
+            <aside id="welcome-slideshow" class="glass-panel">
+                <div class="slideshow-inner">
+                    <!-- Images to be uploaded to Photos/ folder -->
+                    <img src="Photos/photo1.jpg" alt="Tour Photo 1" onerror="this.src='https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?q=80&w=2070&auto=format&fit=crop'">
+                    <img src="Photos/photo2.jpg" alt="Tour Photo 2" onerror="this.src='https://images.unsplash.com/photo-1559139225-421502cfefd4?q=80&w=2070&auto=format&fit=crop'">
+                    <img src="Photos/photo3.jpg" alt="Tour Photo 3" onerror="this.src='https://images.unsplash.com/photo-1513106580661-1d8e94fa3f63?q=80&w=2070&auto=format&fit=crop'">
+                </div>
+                <div class="slideshow-overlay">
+                    <div class="overlay-content">
+                        <i class="ph ph-camera"></i>
+                        <p class="i18n" data-key="slideshow_caption">Explora Copenhague con nosotros</p>
+                    </div>
+                </div>
+            </aside>
+
             <main id="welcome-step" class="glass-panel" style="text-align: center;">
                 <header>
                     <img src="img/logo FTC.jpeg" alt="B2B Tour Copenhagen" style="width: 150px; height: 150px; border-radius: 50%; margin-bottom: 2rem; border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(255, 107, 0, 0.2);">
@@ -59,7 +75,6 @@
                     <button type="submit" class="btn btn-primary full-width i18n" data-key="enter_btn" style="margin-top: 2rem;">Ingresar a la Calculadora <i class="ph ph-arrow-right"></i></button>
                 </form>
             </main>
-
         </div>
 
         <!-- Form Panel (Calculator - Hidden initially) -->
@@ -254,21 +269,21 @@
                         <div class="stat-icon"><i class="ph ph-buildings"></i></div>
                         <div class="stat-content">
                             <span class="stat-number">+50</span>
-                            <span class="stat-label">Grupos Corporativos</span>
+                            <span class="stat-label i18n" data-key="trust_stat_groups">Grupos Corporativos</span>
                         </div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-icon"><i class="ph ph-star"></i></div>
                         <div class="stat-content">
                             <span class="stat-number">+500</span>
-                            <span class="stat-label">Clientes Felices</span>
+                            <span class="stat-label i18n" data-key="trust_stat_clients">Clientes Felices</span>
                         </div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-icon"><i class="ph ph-calendar-blank"></i></div>
                         <div class="stat-content">
                             <span class="stat-number">4</span>
-                            <span class="stat-label">Años de Experiencia</span>
+                            <span class="stat-label i18n" data-key="trust_stat_years">Años de Experiencia</span>
                         </div>
                     </div>
                 </div>
@@ -276,7 +291,7 @@
                 <div class="trust-divider"></div>
 
                 <div class="logos-section">
-                    <p class="logos-title">Empresas que confían en nosotros</p>
+                    <p class="logos-title i18n" data-key="trust_logos_title">Empresas que confían en nosotros</p>
                     <div class="logos-grid">
                         <!-- Space for logos -->
                         <img src="img/oldani-logo.png" alt="Oldani">
@@ -297,12 +312,12 @@
         <footer id="main-footer" class="glass-panel site-footer" style="grid-column: 1 / -1; margin-top: 2rem; padding: 3rem 2rem;">
             <div class="footer-grid">
                 <div class="footer-col about-col">
-                    <h3 class="footer-title">About Us</h3>
-                    <p>We are a group of independent guides with over 4 years of expertise in the cruise industry, now dedicated to being your premier tour operator in Copenhagen. Our passion for Denmark drives us to share the hidden gems and vibrant culture of this beautiful city through personalized, high-quality tours. By combining local insight with our intuitive B2B platform, we empower travel agencies to provide their clients with immediate, accurate quotes and exceptional service, making us the trusted choice for partners worldwide.</p>
+                    <h3 class="footer-title i18n" data-key="footer_about_title">About Us</h3>
+                    <p class="i18n" data-key="footer_about_text">We are a group of independent guides with over 4 years of expertise in the cruise industry, offering excellence as a premier tour operator in Copenhagen. Our passion for Denmark drives us to share the hidden gems and vibrant culture of this beautiful city through personalized, high-quality tours. By combining local insight with our intuitive B2B platform, we empower travel agencies to provide their clients with immediate, accurate quotes and exceptional service, making us the trusted choice for partners worldwide.</p>
                 </div>
                 
                 <div class="footer-col contact-col">
-                    <h3 class="footer-title">Contact Us</h3>
+                    <h3 class="footer-title i18n" data-key="footer_contact_title">Contact Us</h3>
                     <ul class="contact-list">
                         <li><i class="ph ph-map-pin"></i> Theklavej 36, Copenhagen, 2400 NV</li>
                         <li><a href="tel:+4571617970"><i class="ph ph-phone"></i> +45 71 61 79 70</a></li>
@@ -311,16 +326,16 @@
                 </div>
                 
                 <div class="footer-col hours-col">
-                    <h3 class="footer-title">Working Hours</h3>
+                    <h3 class="footer-title i18n" data-key="footer_hours_title">Working Hours</h3>
                     <ul class="hours-list">
-                        <li><span>Mon - Fri:</span> 09:00 - 18:00</li>
-                        <li><span>Sat - Sun:</span> 10:00 - 15:00</li>
+                        <li><span class="i18n" data-key="footer_hours_mon_fri">Mon - Fri:</span> 09:00 - 18:00</li>
+                        <li><span class="i18n" data-key="footer_hours_sat_sun">Sat - Sun:</span> 10:00 - 15:00</li>
                     </ul>
                 </div>
             </div>
             
             <div class="footer-bottom" style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); text-align: center; font-size: 0.85rem; color: var(--text-muted);">
-                <p>&copy; 2026 Free Tour Copenhagen. All rights reserved.</p>
+                <p>&copy; 2026 Free Tour Copenhagen. <span class="i18n" data-key="footer_all_rights">All rights reserved.</span></p>
             </div>
         </footer>
     </div>

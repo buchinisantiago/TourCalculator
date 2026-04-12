@@ -89,7 +89,19 @@ const TRANSLATIONS = {
         info_includes: "Incluye",
         info_no_venues: "Sin venues incluidos",
         trust_title: "¿Por qué elegirnos?",
-        trust_subtitle: "Tu socio de confianza en Copenhague"
+        trust_subtitle: "Tu socio de confianza en Copenhague",
+        trust_stat_groups: "Grupos Corporativos",
+        trust_stat_clients: "Clientes Felices",
+        trust_stat_years: "Años de Experiencia",
+        trust_logos_title: "Empresas que confían en nosotros",
+        slideshow_caption: "Explora Copenhague con nosotros",
+        footer_about_title: "Sobre nosotros",
+        footer_about_text: "Somos un grupo de guías independientes con más de 4 años de experiencia en la industria de cruceros, ofreciendo excelencia como tour operador líder en Copenhague. Nuestra pasión por Dinamarca nos impulsa a compartir los tesoros ocultos y la vibrante cultura de esta hermosa ciudad a través de tours personalizados de alta calidad. Al combinar el conocimiento local con nuestra intuitiva plataforma B2B, empoderamos a las agencias de viajes para ofrecer a sus clientes cotizaciones inmediatas y precisas y un servicio excepcional, convirtiéndonos en la elección de confianza para socios en todo el mundo.",
+        footer_contact_title: "Contáctanos",
+        footer_hours_title: "Horario de atención",
+        footer_hours_mon_fri: "Lun - Vie:",
+        footer_hours_sat_sun: "Sáb - Dom:",
+        footer_all_rights: "Todos los derechos reservados."
     },
     ENG: {
         admin_panel: "Admin Panel",
@@ -121,10 +133,6 @@ const TRANSLATIONS = {
         approx: "Approx.",
         copy_btn: "Copy Text",
         email_btn: "Email Invoice",
-        total_pax: "per person",
-        approx: "Approx.",
-        copy_btn: "Copy Text",
-        email_btn: "Email Invoice",
         save_btn: "Save & Record",
         other: "OTHER",
         yes: "Yes",
@@ -141,7 +149,19 @@ const TRANSLATIONS = {
         info_includes: "Includes",
         info_no_venues: "No venues included",
         trust_title: "Why choose us?",
-        trust_subtitle: "Your trusted partner in Copenhagen"
+        trust_subtitle: "Your trusted partner in Copenhagen",
+        trust_stat_groups: "Corporate Groups",
+        trust_stat_clients: "Happy Clients",
+        trust_stat_years: "Years of Experience",
+        trust_logos_title: "Companies that trust us",
+        slideshow_caption: "Explore Copenhagen with us",
+        footer_about_title: "About Us",
+        footer_about_text: "We are a group of independent guides with over 4 years of expertise in the cruise industry, offering excellence as a premier tour operator in Copenhagen. Our passion for Denmark drives us to share the hidden gems and vibrant culture of this beautiful city through personalized, high-quality tours. By combining local insight with our intuitive B2B platform, we empower travel agencies to provide their clients with immediate, accurate quotes and exceptional service, making us the trusted choice for partners worldwide.",
+        footer_contact_title: "Contact Us",
+        footer_hours_title: "Working Hours",
+        footer_hours_mon_fri: "Mon - Fri:",
+        footer_hours_sat_sun: "Sat - Sun:",
+        footer_all_rights: "All rights reserved."
     },
     ITA: {
         admin_panel: "Pannello Amministratore",
@@ -189,7 +209,19 @@ const TRANSLATIONS = {
         info_includes: "Include",
         info_no_venues: "Nessun venue incluso",
         trust_title: "Perché elegirci?",
-        trust_subtitle: "Il tuo partner di fiducia a Copenaghen"
+        trust_subtitle: "Il tuo partner di fiducia a Copenaghen",
+        trust_stat_groups: "Gruppi Aziendali",
+        trust_stat_clients: "Clienti Felici",
+        trust_stat_years: "Anni di Esperienza",
+        trust_logos_title: "Aziende che si fidano di noi",
+        slideshow_caption: "Esplora Copenhagen con noi",
+        footer_about_title: "Chi siamo",
+        footer_about_text: "Siamo un gruppo di guide indipendenti con oltre 4 anni di esperienza nel settore delle crociere, che offrono eccellenza come tour operator leader a Copenaghen. La nostra passione per la Danimarca ci spinge a condividere le gemme nascoste e la vibrante cultura di questa splendida città attraverso tour personalizzati di alta qualità. Combinando la conoscenza locale con la nostra intuitiva piattaforma B2B, consentiamo alle agenzie di viaggio di fornire ai propri clienti preventivi immediati e precisi e un servizio eccezionale, rendendoci la scelta di fiducia per i partner in tutto il mondo.",
+        footer_contact_title: "Contattaci",
+        footer_hours_title: "Orario di lavoro",
+        footer_hours_mon_fri: "Lun - Ven:",
+        footer_hours_sat_sun: "Sab - Dom:",
+        footer_all_rights: "Tutti i diritti riservati."
     }
 };
 
