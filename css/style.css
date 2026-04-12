@@ -111,7 +111,7 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    gap: 3rem;
+    gap: 1.5rem;
   }
   
   .trust-header {
@@ -219,7 +219,7 @@ body {
 .logos-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 2rem;
+  gap: 1rem;
   opacity: 0.5;
   filter: grayscale(1);
   transition: all 0.4s ease;
@@ -231,7 +231,7 @@ body {
 }
 
 .logos-grid img {
-  height: 40px;
+  height: 32px;
   width: auto;
   object-fit: contain;
 }
@@ -239,11 +239,11 @@ body {
 .logo-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .logo-icon {
-  height: 40px !important;
+  height: 32px !important;
 }
 
 .mamemi-icon {
@@ -258,7 +258,7 @@ body {
 
 .logo-text {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
   letter-spacing: -0.5px;
   white-space: nowrap;
